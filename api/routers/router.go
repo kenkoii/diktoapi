@@ -8,5 +8,6 @@ import (
 func InitRoutes() *mux.Router {
 	router := mux.NewRouter()
 	router = SetCommentsRoutes(router)
+	router = SetWordsRoutes(router)
 	return router
 }
