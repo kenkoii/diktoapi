@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"io"
 	"log"
 	"strconv"
@@ -17,10 +18,28 @@ import (
 	"google.golang.org/appengine/urlfetch"
 )
 
+type EntryListQuery struct {
+	XMLName xml.Name `xml:"entry_list"`
+	Entry   Entry    `xml:"entry"`
+}
+
+type Entry struct {
+	Sound Sound `xml:"sound"`
+}
+
+type Sound struct {
+	Wav Wav `xml:"wav"`
+}
+
+type Wav struct {
+	Content string `xml:",innerxml"`
+}
+
 // Query is the model for a params object
 type Query struct {
-	ID     string `json:"id"`
-	UserID string `json:"userid"`
+	ID       string `json:"id"`
+	UserID   string `json:"userid"`
+	Password string `json:"password"`
 }
 
 type WordsAPIQuery struct {
@@ -160,17 +179,22 @@ func FavoriteWord(c context.Context, r io.ReadCloser) (int64, error) {
 	}
 
 	var u User
+	u.Password, _ = strconv.ParseInt(q.Password, 10, 64)
 	u.ID, err = strconv.ParseInt(q.UserID, 10, 64)
+
 	if err = u.search(c); err != nil {
 		// return 0, err
-		u.Created = time.Now()
-		err = u.save(c)
-		if err != nil {
-			return 0, err
+		log.Println("No account!!!")
+		if verifyPassword(c, u.ID, u.Password) == 1 {
+			u.Created = time.Now()
+			err = u.save(c)
+			if err != nil {
+				return 0, err
+			}
 		}
 	}
 
-	favorite := Favorite{Word: word.Text, Created: time.Now()}
+	favorite := Favorite{Word: word.Text, Created: time.Now(), Status: "studying"}
 	for _, value := range u.Favorites {
 		if value.Word == word.Text {
 			return 2, nil
@@ -255,6 +279,7 @@ func contains(f []Favorite, w Word) bool {
 }
 
 func searchWord(c context.Context, word *Word) (*Word, error) {
+	// go searchAudio(c, word)
 	var apiURL = "https://wordsapiv1.p.mashape.com/words/"
 	client := urlfetch.Client(c)
 	req, err := http.NewRequest("GET", apiURL+word.Text, nil)
@@ -295,10 +320,48 @@ func searchWord(c context.Context, word *Word) (*Word, error) {
 		word.Pronunciation = append(word.Pronunciation, Pronunciation{PartOfSpeech: k, IPA: v})
 	}
 
-	err = word.save(c)
+	// DECORATOR PATTERN
+	// err = word.save(c)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	return searchAudio(c, word)
+	// return word, nil
+	// return nil, nil
+}
+
+func searchAudio(c context.Context, word *Word) (*Word, error) {
+	var apiURL = "https://www.dictionaryapi.com/api/v1/references/collegiate/xml/"
+	var apiKey = "?key=720750f6-2da7-4612-bb3e-2914b923052e"
+	var baseAudioURL = "http://media.merriam-webster.com/soundc11/"
+	client := urlfetch.Client(c)
+	req, err := http.NewRequest("GET", apiURL+word.Text+apiKey, nil)
 	if err != nil {
 		return nil, err
 	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	log.Println("response Status:", resp.Status)
+	log.Println("response Headers:", resp.Header)
+	log.Println("request URL: ", resp.Request.URL)
+
+	var eq EntryListQuery
+	err = xml.NewDecoder(resp.Body).Decode(&eq)
+	// data, err := ioutil.ReadAll(resp.Body)
+	// err = xml.Unmarshal(data, &eq)
+	if err != nil {
+		return nil, err
+	}
+	log.Println(eq.Entry.Sound.Wav.Content)
+	var fileName = eq.Entry.Sound.Wav.Content
+	var firstLetter = string(eq.Entry.Sound.Wav.Content[0])
+	word.Audio = baseAudioURL + firstLetter + "/" + fileName
+	word.save(c)
+	log.Println(word)
 	return word, nil
-	// return nil, nil
 }

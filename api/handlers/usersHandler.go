@@ -14,9 +14,9 @@ import (
 func GetUserEndpoint(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseInt(vars["id"], 10, 64)
-
+	password, _ := strconv.ParseInt(vars["password"], 10, 64)
 	ctx := appengine.NewContext(r)
-	user, err := models.GetUser(ctx, id)
+	user, err := models.GetUser(ctx, id, password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
