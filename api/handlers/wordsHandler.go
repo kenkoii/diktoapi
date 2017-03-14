@@ -73,7 +73,7 @@ func FavoriteWordEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprintln(w, res)
-	// json.NewEncoder(w).Encode(word)
+	// json.NewEncoder(w).Encode(res)
 }
 
 // RemoveFavoriteWordEndpoint handles the /api/v1/words/{id} {POST} method
