@@ -212,6 +212,60 @@ func FavoriteWord(c context.Context, r io.ReadCloser) (int64, error) {
 	return 1, nil
 }
 
+// FrontendFavoriteWord takes a word and user info in the body, adds word to users favorites
+func FrontendFavoriteWord(c context.Context, r io.ReadCloser) (interface{}, error) {
+	var q Query
+	err := json.NewDecoder(r).Decode(&q)
+	log.Println(q)
+	if err != nil {
+		return 0, err
+	}
+	var word Word
+	word.Text = q.ID
+	if err = word.search(c); err != nil {
+		log.Println(err)
+		w, err := GetWord(c, q.ID)
+		word.Created = w.Created
+		word.Lemma = w.Lemma
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	var u User
+	u.Password, _ = strconv.ParseInt(q.Password, 10, 64)
+	u.ID, err = strconv.ParseInt(q.UserID, 10, 64)
+
+	if err = u.search(c); err != nil {
+		// return 0, err
+		log.Println("No account!!!")
+		if verifyPassword(c, u.ID, u.Password) == 1 {
+			u.Created = time.Now()
+			err = u.save(c)
+			if err != nil {
+				return 0, err
+			}
+		}
+	}
+
+	favorite := Favorite{Word: word.Text, Created: time.Now(), Status: "studying"}
+	for _, value := range u.Favorites {
+		if value.Word == word.Text {
+			return 2, nil
+		}
+	}
+
+	if contains(u.Favorites, word) {
+		return 2, nil
+	}
+	u.Favorites = append(u.Favorites, favorite)
+	err = u.save(c)
+	if err != nil {
+		return 0, err
+	}
+	return favorite, nil
+}
+
 // RemoveFavoriteWord takes a word and user info in the body, removes word from users favorites
 func RemoveFavoriteWord(c context.Context, r io.ReadCloser) (*Word, error) {
 	var q Query
