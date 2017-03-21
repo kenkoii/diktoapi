@@ -12,6 +12,10 @@ import (
 
 	"strings"
 
+	"io/ioutil"
+
+	"bytes"
+
 	"github.com/asaskevich/govalidator"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
@@ -51,6 +55,10 @@ type WordsAPIQuery struct {
 type Pronunciation struct {
 	PartOfSpeech string `json:"partOfSpeech"`
 	IPA          string `json:"IPA"`
+}
+
+type Pron struct {
+	Pronunciation string `json:"pronunciation"`
 }
 
 type Definition struct {
@@ -351,11 +359,21 @@ func searchWord(c context.Context, word *Word) (*Word, error) {
 	defer resp.Body.Close()
 	log.Println("response Status:", resp.Status)
 	log.Println("response Headers:", resp.Header)
+	b, err := ioutil.ReadAll(resp.Body)
+	r := bytes.NewBuffer(b)
 
 	var w WordsAPIQuery
-	err = json.NewDecoder(resp.Body).Decode(&w)
+	var p Pron
+	err = json.NewDecoder(r).Decode(&w)
 	if err != nil {
-		return nil, err
+		// log.Println(w)
+		// return nil, err
+		r = bytes.NewBuffer(b)
+		err = json.NewDecoder(r).Decode(&p)
+		if err != nil {
+			log.Println("error: " + err.Error())
+		}
+		word.Pronunciation = append(word.Pronunciation, Pronunciation{PartOfSpeech: "all", IPA: p.Pronunciation})
 	}
 
 	word.Created = time.Now()
