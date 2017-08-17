@@ -74,6 +74,9 @@ func NewUser(c context.Context, r io.ReadCloser) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	// set some setting to true
+	user.Settings.ShowTime = true
+	user.Settings.ShowTranslation = true
 
 	err = user.save(c)
 	if err != nil {
