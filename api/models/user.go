@@ -87,6 +87,7 @@ func (user *User) search(c context.Context) error {
 		if err != nil {
 			return err
 		}
+		user.saveToMemcache(c)
 	}
 	return nil
 }
