@@ -15,6 +15,7 @@ func init() {
 	})
 	router := routers.InitRoutes()
 	router.HandleFunc("/", handlers.Handler)
+	router.HandleFunc("/worker", handlers.Worker)
 	n := negroni.Classic()
 	handler := c.Handler(router)
 	n.UseHandler(handler)
