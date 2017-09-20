@@ -599,11 +599,6 @@
                 const xmlData = parser.parseFromString(data, 'application/xml');
                 console.log(xmlData);
                 self.wordObj().translation = data.getElementsByTagName('string')[0].innerHTML;
-                // xmlDoc = $.parseXML(data),
-                // $xml = $(xmlDoc),
-                // $string = $xml.find('string');
-                // self.wordObj().translation = $string.text;
-                // console.log(data);
                 self.wordObj(self.wordObj());
                 updateWord(self.wordObj().text);
                 return data;
@@ -841,8 +836,6 @@
     .tab li.active a::before {
         background: #d9ab7e;
     }
-    /*# sourceMappingURL=tab.component.css.map */
-
     .hidden {
         display: none;
         height: 100% !important;
@@ -851,7 +844,6 @@
     .active {
         display: block !important;
     }
-    /*# sourceMappingURL=tab-item.component.css.map */
 
     .dragged {
         box-shadow: 0px 0px 230px rgba(255, 255, 255, 0.5) !important;

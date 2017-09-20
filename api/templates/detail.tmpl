@@ -15,26 +15,26 @@
         <div class="container fit">
             <div class="card fit ">
                 <header>
-                    <h2 class="text center white no-margin" data-bind="text: word().text"><a (click)="playAudio()" style="display: initial"><i class="text white fa fa-volume-up"></i></a></h2>
+                    <h2 class="text center white no-margin" data-bind="text: wordObj().text"><a (click)="playAudio()" style="display: initial"><i class="text white fa fa-volume-up"></i></a></h2>
                     <p class="text center sunflower no-margin"><em data-bind="text: formattedPronunciation"></em> •
-                        <strong data-bind="text: word().translation"></strong></p>
+                        <strong data-bind="text: wordObj().translation"></strong></p>
                 </header>
                 <div class="body">
                     <div class="text-group">
                         <h4 class="text white no-margin">M E A N I N G</h4>
-                        <div data-bind="foreach: word().definition">
+                        <div data-bind="foreach: wordObj().definition">
                             <p class="text silver"><span class="text peterriver" data-bind="text: partOfSpeech">part of speech</span> • <span data-bind="text: definition">definition</span></p>
                         </div>
                     </div>
                     <div class="text-group">
                         <h4 class="text white no-margin">E X A M P L E</h4>
-                        <div data-bind="foreach: word().examples">
+                        <div data-bind="foreach: wordObj().examples">
                             <p class="text silver"><span class="text white"> • </span><span data-bind="text: $rawData"></span></p>
                         </div>
                     </div>
                     <div class="text-group">
                         <h4 class="text white no-margin">S Y N O N Y M</h4>
-                        <p class="text silver" data-bind="foreach: word().synonyms"><span data-bind="text: $rawData + ', '" [routerLink]="['/','word',synonym]"></span></p>
+                        <p class="text silver" data-bind="foreach: wordObj().synonyms"><span data-bind="text: $rawData + ', '" [routerLink]="['/','word',synonym]"></span></p>
                     </div>
                 </div>
             </div>
@@ -77,19 +77,35 @@
 <script>
     var data = {{.data}}
     console.log(data);
-    const API_URL = 'http://localhost:8080/api/v1/';
+
+    const MICROSOFT_SUBSCRIPTION_KEY = '07657cb89d4c4136b5165509a16c469a';
+    const MICROSOFT_TOKEN_ENDPOINT = 'https://api.cognitive.microsoft.com/sts/v1.0/issueToken?Subscription-Key=';
+    const MICROSOFT_TRANSLATE_ENDPOINT = 'https://api.microsofttranslator.com/v2/http.svc/Translate?appid=Bearer%20';
+    const MICROSOFT_REQUEST_HEADER = {  'Content-Type': 'application/json',
+                                        'Access-Control-Allow-Origin' : '*',
+                                        'Accept': 'application/jwt' };
+
+    var getUrl = window.location;
+    var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[0];
+    const API_URL = baseUrl + 'api/v1/';
+
 
     function AppViewModel() {
         var self = this;
-        self.word = ko.observable(data.word);
+        self.wordObj = ko.observable(data.word);
         self.user = ko.observable(data.user);
+
+        if(self.wordObj().translation === '') {
+            getTranslation(self.wordObj().text);
+        }
+
         self.isPromptFave = ko.observable(false);
         self.isFavorited = ko.computed(function(){
             console.log(self.user());
             if(self.user()){
                 if(self.user().favorites) {
                     var list = self.user().favorites.filter((favorite) => {
-                        return favorite.word == self.word().text;
+                        return favorite.word == self.wordObj().text;
                     });
                     return list.length > 0;                   
                 }
@@ -101,7 +117,7 @@
             if(self.user()){
                 self.user().favorites = self.user().favorites || [];
                 var list = self.user().favorites.filter((favorite) => {
-                    return favorite.word == self.word().text;
+                    return favorite.word == self.wordObj().text;
                 });
                 if(list[0]) {
                     return list[0].status == 'mastered';
@@ -112,10 +128,10 @@
 
         // Computed data
         self.formattedPronunciation = ko.computed(function() {
-            console.log(self.word().text );
+            console.log(self.wordObj().text );
             var pronunciation = '';
-            if(self.word().pronunciation) {
-                pronunciation = self.word().pronunciation[0].IPA || '';
+            if(self.wordObj().pronunciation) {
+                pronunciation = self.wordObj().pronunciation[0].IPA || '';
             }
             return '(' + pronunciation + ')';
         });
@@ -126,7 +142,7 @@
                 self.user().favorites = self.user().favorites || [];
                 console.log("Toggle Status pressed");
                 var favorites = self.user().favorites.map(function(favorite){
-                    if(favorite && favorite.word === self.word().text){
+                    if(favorite && favorite.word === self.wordObj().text){
                         if(favorite.status === 'studying') {
                             favorite.status = 'mastered';
                         } else {
@@ -148,9 +164,9 @@
             if(self.user()){
                 self.user().favorites = self.user().favorites || [];
                 if(self.isFavorited()) {
-                    self.removeFavorite(self.word().text).then(() => {
+                    self.removeFavorite(self.wordObj().text).then(() => {
                         var favorites = self.user().favorites.filter((favorite) => {
-                            return favorite.word != self.word().text;
+                            return favorite.word != self.wordObj().text;
                         });
                         console.log(favorites);
                         self.user().favorites = favorites;
@@ -158,7 +174,7 @@
                         console.log(self.user());
                     });
                 } else {
-                    self.addFavorite(self.word().text).then((favorite) => {
+                    self.addFavorite(self.wordObj().text).then((favorite) => {
                         self.user().favorites.push(favorite);
                         console.log("Favorite added:", favorite);
                         console.log(self.user().favorites);
@@ -261,11 +277,64 @@
                 }
             });
         }
-        //Listener for changes
-        // self.user.subscribe((user) => {
-        //     console.log("Subscription: ", user);
-       
-        // });
+
+        function updateWord(word) {
+            return $.ajax({
+                url: API_URL + 'words/' + word,
+                type: 'put',
+                data: JSON.stringify(self.wordObj()),
+                headers: MICROSOFT_REQUEST_HEADER,
+                success: function(data){
+                    console.log(data);
+                }
+            });
+        }
+
+        function getTranslation(word) {
+            const jwt = JWT.get();
+            if(jwt === null) {
+                getMicrosoftAccessToken().then(()=>{
+                    getMicrosoftTranslation(word);
+                });
+            } else {
+                if(JWT.validate(jwt)){
+                    console.log(jwt);
+                    getMicrosoftTranslation(word);
+                } else {
+                    getMicrosoftAccessToken().then(()=>{
+                        getMicrosoftTranslation(word);
+                    });
+                }
+            }
+        }
+
+        function getMicrosoftTranslation(word) {
+            const request = MICROSOFT_TRANSLATE_ENDPOINT + JWT.get() + '&text=' + word + '&to=' + 'ja';
+            return $.get(request, function(data) {
+                console.log(data);
+                const parser = new DOMParser();
+                const xmlData = parser.parseFromString(data, 'application/xml');
+                console.log(xmlData);
+                self.wordObj().translation = data.getElementsByTagName('string')[0].innerHTML;
+                self.wordObj(self.wordObj());
+                updateWord(self.wordObj().text);
+                return data;
+            });
+        }
+
+        function getMicrosoftAccessToken() {
+            return $.ajax({
+                url: MICROSOFT_TOKEN_ENDPOINT + MICROSOFT_SUBSCRIPTION_KEY,
+                type: 'post',
+                data: {},
+                headers: MICROSOFT_REQUEST_HEADER,
+                success: function(data){
+                    var jwtValue = data;
+                    JWT.keep(jwtValue);
+                    console.log(data);
+                }
+            });
+        }
     }
 
  
@@ -448,7 +517,6 @@
             border-radius: 0px;
         }
     }
-    /*# sourceMappingURL=word-detail.component.css.map */
 </style>
 
 
