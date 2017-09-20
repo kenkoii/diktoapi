@@ -156,6 +156,7 @@ func GetUser(c context.Context, id int64, password int64) (interface{}, error) {
 		case 1:
 			user.Created = time.Now()
 			user.Password = password
+			user.Favorites = []Favorite{}
 			err = user.save(c)
 			if err != nil {
 				return nil, err

@@ -3,21 +3,20 @@ package app
 import (
 	"net/http"
 
-	"github.com/codegangsta/negroni"
-	"github.com/kenkoii/diktoapi/api/handlers"
+	"github.com/gin-gonic/gin"
+	"github.com/kenkoii/diktoapi/api/middlewares"
 	"github.com/kenkoii/diktoapi/api/routers"
-	"github.com/rs/cors"
 )
 
 func init() {
-	c := cors.New(cors.Options{
-		AllowedMethods: []string{"GET", "POST", "DELETE", "PUT"},
-	})
-	router := routers.InitRoutes()
-	router.HandleFunc("/", handlers.Handler)
-	router.HandleFunc("/worker", handlers.Worker)
-	n := negroni.Classic()
-	handler := c.Handler(router)
-	n.UseHandler(handler)
-	http.Handle("/", n)
+	http.Handle("/", GetMainEngine())
+}
+
+func GetMainEngine() *gin.Engine {
+	router := gin.Default()
+	router.Use(middlewares.CORSMiddleware())
+	router.Static("assets", "../api/assets")
+	router.LoadHTMLGlob("../api/templates/*")
+	router = routers.InitGinRoutes(router)
+	return router
 }

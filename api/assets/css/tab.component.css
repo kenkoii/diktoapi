@@ -1,0 +1,74 @@
+.tab {
+  padding: 0;
+  margin: 0;
+  position: fixed;
+  left: 0;
+  top: 61px;
+  width: 100%;
+  z-index: 100;
+  white-space: nowrap; }
+  .tab.scroll {
+    overflow-x: auto; }
+  .tab li {
+    width: 50%;
+    display: inline-block;
+    text-align: center;
+    padding: 0px;
+    height: 100% !important; }
+    .tab li a {
+      display: block;
+      position: relative;
+      color: #fff;
+      padding: 15px 0px;
+      text-decoration: none;
+      background: #926655;
+      font-family: Poppins,sans-serif;
+      font-size: 13px;
+      margin: 0 10px;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+      position: relative; }
+      .tab li a::after {
+        content: " ";
+        display: block;
+        background: #926655;
+        position: absolute;
+        border-top-left-radius: 5px;
+        transform: skewX(-5deg);
+        top: 0;
+        left: -8px;
+        width: 30px;
+        height: 100%; }
+      .tab li a::before {
+        content: " ";
+        display: block;
+        background: #926655;
+        position: absolute;
+        border-top-right-radius: 5px;
+        transform: skewX(5deg);
+        top: 0;
+        right: -8px;
+        width: 30px;
+        height: 100%; }
+      .tab li a img {
+        width: 50px;
+        height: auto;
+        position: absolute;
+        top: 6px;
+        left: 25%; }
+    .tab li span {
+      position: absolute;
+      top: 6px;
+      right: 15px;
+      display: inline-block;
+      border-radius: 3px;
+      padding: 0 10px;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.5); }
+    .tab li.active a {
+      position: relative;
+      background: #d9ab7e; }
+      .tab li.active a::after, .tab li.active a::before {
+        background: #d9ab7e; }
+
+/*# sourceMappingURL=tab.component.css.map */
