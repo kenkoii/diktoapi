@@ -44,10 +44,11 @@
             <div class="hidden" data-bind="css: { active : isActive('mastered') }">
                 <div class="section">
                     <div class="container fit">
-                        <ul class="list" infinite-scroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="100" (scrolled)="onStudyingScroll()"
+                        <ul id="mastered" class="list" data-bind="event: {scroll: onStudyingScroll}"
+                            infinite-scroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="100" (scrolled)="onStudyingScroll()"
                             [scrollWindow]="false">
                             <li class="item animate fade-in-up" data-bind="foreach: mastered">
-                                <div #div style="padding: 0;" class="content">
+                                <div #div style="padding: 0; background-color: #0f3320" class="content">
                                     <div data-bind="panmove: onPan,
                                                     panend: onPanEnd,
                                                     element: el,
@@ -55,7 +56,7 @@
                                                     css: {single: !$parent.user().settings.showTranslation},
                                                     click: goToWord" 
                                         (click)="playClickAudio()" class="detail" [routerLink]="['/','word',favorite.word]" [ngClass]="{'single': !(settings | async).showTranslation}">
-                                        <h4 class="text white no-margin"><span class="text white" data-bind="text: word"></span><span *ngIf="word && (settings | async).showPronunciation" data-bind="if: $parent.user().settings.showPronunciation"><span class="text sunflower" data-bind="text: formattedPronunciation"></span></span>
+                                        <h4 class="text white no-margin"><span class="text white word" style="font-family: 'Poppins Bold', sans-serif; font-size: 19px;" data-bind="text: word"></span>&nbsp;<span *ngIf="word && (settings | async).showPronunciation" data-bind="if: $parent.user().settings.showPronunciation"><span class="text sunflower" data-bind="text: formattedPronunciation"></span></span>
                                             <span data-bind="if: $parent.user().settings.showTime"><span class="text sunflower" *ngIf="(settings | async).showTime"> • <span class="text sunflower" data-bind="text: timeCreated">1m</span></span></span>
                                         </h4>
                                         <p class="text white no-margin">
@@ -77,10 +78,11 @@
             <div class="hidden" data-bind="css: { active : isActive('studying') }">
                 <div class="section">
                     <div class="container fit">
-                        <ul class="list" infinite-scroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="100" (scrolled)="onStudyingScroll()"
+                        <ul id="studying" class="list" data-bind="event: {scroll: onStudyingScroll}"
+                            infinite-scroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="100" (scrolled)="onStudyingScroll()"
                             [scrollWindow]="false">
-                            <li class="item animate fade-in-up" data-bind="foreach: studying">
-                                <div #div style="padding: 0;" class="content">
+                            <li class="item animate fade-in-up" data-bind="foreach: studyingBuffer">
+                                <div #div style="padding: 0; background-color: #0f3320" class="content">
                                     <div data-bind="panmove: onPan, 
                                                     panend: onPanEnd, 
                                                     element: el, 
@@ -88,7 +90,7 @@
                                                     css: {single: !$parent.user().settings.showTranslation},
                                                     click: goToWord, clickBubble: false" 
                                         (click)="playClickAudio()" class="detail" [routerLink]="['/','word',favorite.word]" [ngClass]="{'single': !(settings | async).showTranslation}">
-                                        <h4 class="text white no-margin"><span class="text white" data-bind="text: word"></span><span *ngIf="word && (settings | async).showPronunciation" data-bind="if: $parent.user().settings.showPronunciation"><span class="text sunflower" data-bind="text: formattedPronunciation"></span></span>
+                                        <h4 class="text white no-margin"><span class="text white" style="font-family: 'Poppins Bold', sans-serif; font-size: 19px;" data-bind="text: word"></span>&nbsp;<span *ngIf="word && (settings | async).showPronunciation" data-bind="if: $parent.user().settings.showPronunciation"><span class="text sunflower" data-bind="text: formattedPronunciation"></span></span>
                                             <span data-bind="if: $parent.user().settings.showTime"><span class="text sunflower" *ngIf="(settings | async).showTime"> • <span class="text sunflower" data-bind="text: timeCreated">1m</span></span><span>
                                         </h4>
                                         <p class="text white no-margin">
@@ -168,7 +170,7 @@
 <script src="../../assets/js/jquery.min.js"></script>
 <script src="../../assets/js/knockout-3.4.2.js"></script>
 <script src="../../assets/js/howler.core.min.js"></script>
-<script src="http://hammerjs.github.io/dist/hammer.min.js"></script>
+<script src="../../assets/js/hammer.min.js"></script>
 <script src="../../assets/js/main.js"></script>
 <script src="../../assets/js/jwt-client.min.js"></script>
 <script src="../../assets/js/timeago.min.js"></script>
@@ -193,6 +195,8 @@
         self.activeTab = ko.observable("studying");
         self.studying = ko.observableArray([]);
         self.mastered = ko.observableArray([]);
+        self.studyingBuffer = ko.observableArray([]);
+        self.masteredBuffer = ko.observableArray([]);
         self.selected = ko.observable("favorites");
         self.isPromptFave = ko.observable(false);
         self.selectedWord = ko.observable({});
@@ -200,7 +204,6 @@
 
         self.user.subscribe((user) => {
             console.log("Change Detected");
-            // checkUser();
             self.updateUser();
         });
 
@@ -246,32 +249,11 @@
             console.log("Toggle Favorite WordViewModel: ", favorite);
             if(favorite.status === 'studying') {
                 favorite.status = 'mastered';
-                // var fav = self.studying().filter(function(fav){
-                //     return favorite.word === fav.word;
-                // })[0];
-                // self.studying.remove(fav)
                 self.studying.remove(favorite)
-                // if(self.mastered().filter(function(fav){
-                //     return favorite.word === fav.word;
-                // }).length === 0){
-                //     // self.mastered.push(new WordViewModel(favorite, self));
-                //     // self.mastered.push(favorite);
-                // }
-
                 self.mastered.push(favorite);
             } else {
                 favorite.status = 'studying';
-                // var fav = self.mastered().filter(function(fav){
-                //     return favorite.word === fav.word;
-                // })[0];
-                // self.mastered.remove(fav)
-                self.mastered.remove(favorite)
-
-                // if(self.studying().filter(function(fav){
-                //     return favorite.word === fav.word;
-                // }).length === 0){
-                //     self.studying.push(new WordViewModel(favorite, self));
-                // }
+                self.mastered.remove(favorite);
                 self.studying.push(favorite);
             }
             self.user().favorites.map(function(fav){
@@ -281,32 +263,11 @@
                 return fav;
             });
             self.user(self.user());
+            self.masteredBuffer(self.mastered())
+            self.studyingBuffer(self.studying())
             console.log('Studying: ', self.studying());
             console.log('Mastered: ', self.mastered());
             console.log('User: ', self.user());
-        }
-
-        self.toggleStatus = function(fav) {
-            toggleAudio.play();
-            if(self.user()){
-                self.user().favorites = self.user().favorites || [];
-                console.log("Toggle Status pressed");
-                var favorites = self.user().favorites.map(function(favorite){
-                    if(favorite && favorite.word === fav.text){
-                        if(favorite.status === 'studying') {
-                            favorite.status = 'mastered';
-                        } else {
-                            favorite.status = 'studying';
-                        }
-                    }
-                    return favorite;
-                });
-                console.log("ToggleStatus: ",favorites);
-                self.user().favorites = favorites;
-                self.updateUser().then(()=>{
-                    self.user(self.user());
-                })
-            }
         }
 
         self.toggleSort = function() {
@@ -337,7 +298,6 @@
             console.log("toggleTime pressed: ", self.user().settings.showTime);
         }
 
-
         self.close = function() {
             backAudio.play();
             location.href = 'uniwebview://close';
@@ -349,6 +309,42 @@
                 self.selected('favorites');
             } else {
                 self.selected('settings');
+            }
+        }
+
+        self.onStudyingScroll = function(data, event) {
+
+            // Fetch variables
+            var scrollTop = event.target.scrollTop;
+            var windowHeight = $('#studying').height();
+            var bodyHeight = $(document).height() - windowHeight;
+            var scrollPercentage = (scrollTop / bodyHeight);
+
+            // if the scroll is more than 90% from the top, load more content.
+            if(scrollPercentage > 0.7) {    
+                console.log('Scrolled!!!\n');
+                for (let i = 0; i < 1 && self.studyingBuffer().length < self.studying().length; i++) {
+                    console.log('Added: \n', self.studying()[self.studyingBuffer().length + i])
+                    self.studyingBuffer.push(self.studying()[self.studyingBuffer().length + i]);
+                }
+            }
+        }
+
+        self.onMasteredScroll = function(data, event) {
+
+            // Fetch variables
+            var scrollTop = event.target.scrollTop;
+            var windowHeight = $('#mastered').height();
+            var bodyHeight = $(document).height() - windowHeight;
+            var scrollPercentage = (scrollTop / bodyHeight);
+
+            // if the scroll is more than 90% from the top, load more content.
+            if(scrollPercentage > 0.7) {    
+                console.log('Scrolled!!!\n');
+                for (let i = 0; i < 1 && self.masteredBuffer().length < self.mastered().length; i++) {
+                    console.log('Added: \n', self.mastered()[self.masteredBuffer().length + i])
+                    self.studyingBuffer.push(self.mastered()[self.masteredBuffer().length + i]);
+                }
             }
         }
 
@@ -395,6 +391,14 @@
         function checkUser() {
             self.studying(getStudying(self.user().favorites));
             self.mastered(getMastered(self.user().favorites));
+            for (let i = 0; i < 10; i++) {
+                if (self.studying()[i]) {
+                    self.studyingBuffer.push(self.studying()[i]);
+                }
+                if (self.mastered()[i]) {
+                    self.masteredBuffer.push(self.mastered()[i]);
+                }
+            }
         }
 
          function getStudying(favorites) {
@@ -904,7 +908,6 @@
 
     .title {
     width: 100%; }
-
 
     .close {
         box-shadow: none !important;
