@@ -22,7 +22,6 @@ func InitGinRoutes(router *gin.Engine) *gin.Engine {
 	//FRONTEND
 	public := router.Group("/")
 	public.GET("/list/:id/:password", handlers.ListHandler)
-	// public.GET("/settings/:id/:password", handlers.SettingsHandler)
 	public.GET("/word/:word", handlers.DetailHandler)
 	public.GET("/word/:word/:id/:password", handlers.DetailHandler)
 
