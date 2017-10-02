@@ -12,6 +12,5 @@ func SetFavoritesRoutes(router *mux.Router) *mux.Router {
 	// favoritesRouter.HandleFunc("/api/v1/favorite/frontend", handlers.FrontendFavoriteWordEndpoint).Methods("POST")
 	// favoritesRouter.HandleFunc("/api/v1/favorite/frontend/remove", handlers.RemoveFavoriteWordEndpoint).Methods("POST")
 	router.PathPrefix("/api/v1/favorite").Handler(favoritesRouter)
-	//router.
 	return router
 }
