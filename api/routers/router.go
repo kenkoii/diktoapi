@@ -19,6 +19,7 @@ func InitGinRoutes(router *gin.Engine) *gin.Engine {
 	v1.GET("/users/:id/:password", handlers.GetUserEndpoint)
 	v1.PUT("/users/:id", handlers.UpdateUserEndpoint)
 
+	//FRONTEND
 	public := router.Group("/")
 	public.GET("/list/:id/:password", handlers.ListHandler)
 	// public.GET("/settings/:id/:password", handlers.SettingsHandler)
