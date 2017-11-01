@@ -6,9 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"log"
+
 	"github.com/kenkoii/diktoapi/api/models"
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
 )
 
 // GetUserEndpoint handles the /api/v1/users/{id} {GET} method
@@ -62,6 +63,15 @@ func UpdateUserEndpoint(c *gin.Context) {
 // }
 
 func LogErrorGin(c *gin.Context, err error) {
-	log.Errorf(c, "could not put into datastore: %v", err)
-	c.String(http.StatusOK, "-1")
+	log.Printf("Error: %v", err)
+	// c.String(http.StatusOK, "-1")
+	if err.Error() == "invalid character '<' looking for beginning of value" {
+		RespondErrorJSON(c, "Word not found")
+	} else {
+		RespondErrorJSON(c, err.Error())
+	}
+}
+
+func RespondErrorJSON(c *gin.Context, msg string) {
+	c.JSON(http.StatusNotFound, gin.H{"error": msg})
 }
