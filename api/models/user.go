@@ -15,6 +15,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/memcache"
 	"google.golang.org/appengine/urlfetch"
 )
 
@@ -54,14 +55,56 @@ func (user *User) save(c context.Context) error {
 	if err != nil {
 		return err
 	}
+	user.saveToMemcache(c)
+	return nil
+}
 
+func (user *User) saveToMemcache(c context.Context) error {
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		return err
+	}
+	item := &memcache.Item{
+		Key:   strconv.FormatInt(user.ID, 10),
+		Value: userJSON,
+	}
+
+	// Add the item to the memcache, if the key does not already exist
+	if err := memcache.Add(c, item); err == memcache.ErrNotStored {
+		log.Printf("item with key %q already exists", item.Key)
+		if err := memcache.Set(c, item); err != nil {
+			log.Printf("error setting item: %v", err)
+		}
+	} else if err != nil {
+		log.Printf("error adding item: %v", err)
+	}
 	return nil
 }
 
 func (user *User) search(c context.Context) error {
-	err := datastore.Get(c, user.key(c), user)
-	if err != nil {
+	if err := user.searchInMemcache(c); err != nil {
+		err := datastore.Get(c, user.key(c), user)
+		if err != nil {
+			return err
+		}
+		user.saveToMemcache(c)
+	}
+	return nil
+}
+
+func (user *User) searchInMemcache(c context.Context) error {
+
+	// Get the item from the memcache
+	if item, err := memcache.Get(c, strconv.FormatInt(user.ID, 10)); err == memcache.ErrCacheMiss {
 		return err
+	} else if err != nil {
+		return err
+	} else {
+		log.Printf("the item is is %q", item.Value)
+		err = json.Unmarshal(item.Value, user)
+		if err != nil {
+			return nil
+		}
 	}
 	return nil
 }
@@ -74,6 +117,9 @@ func NewUser(c context.Context, r io.ReadCloser) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	// set some setting to true
+	user.Settings.ShowTime = true
+	user.Settings.ShowTranslation = true
 
 	err = user.save(c)
 	if err != nil {
@@ -110,6 +156,7 @@ func GetUser(c context.Context, id int64, password int64) (interface{}, error) {
 		case 1:
 			user.Created = time.Now()
 			user.Password = password
+			user.Favorites = []Favorite{}
 			err = user.save(c)
 			if err != nil {
 				return nil, err

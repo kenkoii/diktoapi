@@ -19,12 +19,16 @@ import (
 	"github.com/asaskevich/govalidator"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/memcache"
 	"google.golang.org/appengine/urlfetch"
 )
 
+// TokenString is the JSON Webtoken provided by Microsoft
+// var TokenString string
+
 type EntryListQuery struct {
 	XMLName xml.Name `xml:"entry_list"`
-	Entry   Entry    `xml:"entry"`
+	Entry   []Entry  `xml:"entry"`
 }
 
 type Entry struct {
@@ -74,6 +78,10 @@ type DefinitionQuery struct {
 	Examples     []string `json:"examples"`
 }
 
+type MicrosoftTranslation struct {
+	Translation string `xml:",innerxml"`
+}
+
 // Word is the model for a comment struct/object
 type Word struct {
 	Text          string          `json:"text"`
@@ -100,14 +108,58 @@ func (word *Word) save(c context.Context) error {
 	if err != nil {
 		return err
 	}
+	word.saveToMemcache(c)
+	return nil
+}
 
+func (word *Word) saveToMemcache(c context.Context) error {
+
+	wordJSON, err := json.Marshal(word)
+	if err != nil {
+		return err
+	}
+	item := &memcache.Item{
+		Key:   word.Text,
+		Value: wordJSON,
+	}
+
+	// Add the item to the memcache, if the key does not already exist
+	if err := memcache.Add(c, item); err == memcache.ErrNotStored {
+		log.Printf("item with key %q already exists", item.Key)
+		if err := memcache.Set(c, item); err != nil {
+			log.Printf("error setting item: %v", err)
+		}
+	} else if err != nil {
+		log.Printf("error adding item: %v", err)
+	}
 	return nil
 }
 
 func (word *Word) search(c context.Context) error {
-	err := datastore.Get(c, word.key(c), word)
+	err := word.searchInMemcache(c)
 	if err != nil {
+		e := datastore.Get(c, word.key(c), word)
+		if e != nil {
+			return e
+		}
+		word.saveToMemcache(c)
+	}
+	return nil
+}
+
+func (word *Word) searchInMemcache(c context.Context) error {
+
+	// Get the item from the memcache
+	if item, err := memcache.Get(c, word.Text); err == memcache.ErrCacheMiss {
 		return err
+	} else if err != nil {
+		return err
+	} else {
+		log.Printf("the item is is %q", item.Value)
+		err = json.Unmarshal(item.Value, word)
+		if err != nil {
+			return nil
+		}
 	}
 	return nil
 }
@@ -195,6 +247,8 @@ func FavoriteWord(c context.Context, r io.ReadCloser) (int64, error) {
 		log.Println("No account!!!")
 		if verifyPassword(c, u.ID, u.Password) == 1 {
 			u.Created = time.Now()
+			u.Settings.ShowTime = true
+			u.Settings.ShowTranslation = true
 			err = u.save(c)
 			if err != nil {
 				return 0, err
@@ -392,15 +446,14 @@ func searchWord(c context.Context, word *Word) (*Word, error) {
 		word.Pronunciation = append(word.Pronunciation, Pronunciation{PartOfSpeech: k, IPA: v})
 	}
 
-	// DECORATOR PATTERN
-	// err = word.save(c)
+	// word, err = searchAudio(c, word)
 	// if err != nil {
 	// 	return nil, err
 	// }
 
+	// return searchTranslation(c, word)
+
 	return searchAudio(c, word)
-	// return word, nil
-	// return nil, nil
 }
 
 func searchAudio(c context.Context, word *Word) (*Word, error) {
@@ -429,11 +482,85 @@ func searchAudio(c context.Context, word *Word) (*Word, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println(eq.Entry.Sound.Wav.Content)
-	var fileName = eq.Entry.Sound.Wav.Content
-	var firstLetter = string(eq.Entry.Sound.Wav.Content[0])
+	log.Println(eq.Entry[0].Sound.Wav.Content)
+	var fileName = eq.Entry[0].Sound.Wav.Content
+	var firstLetter = string(eq.Entry[0].Sound.Wav.Content[0])
 	word.Audio = baseAudioURL + firstLetter + "/" + fileName
 	word.save(c)
 	log.Println(word)
 	return word, nil
+}
+
+func searchTranslation(c context.Context, word *Word) (*Word, error) {
+	var translationURL = "https://api.microsofttranslator.com/v2/http.svc/Translate?appid=Bearer%20"
+
+	// token, err := jwt.Parse()
+	// token, err := jwt(TokenString, func(token *jwt.Token) (interface{}, error) {
+	// 	return token, nil
+	// })
+
+	// // if !token.Valid {
+	// // 	TokenString, err = getMicrosoftToken(c)
+	// // 	if err != nil {
+	// // 		return nil, err
+	// // 	}
+	// // }
+	TokenString, err := getMicrosoftToken(c)
+	if err != nil {
+		return nil, err
+	}
+
+	client := urlfetch.Client(c)
+	req, err := http.NewRequest("GET", translationURL+TokenString+"&text="+word.Text+"&to=ja", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	log.Println("response Status:", resp.Status)
+	log.Println("response Headers:", resp.Header)
+	var microsoftTranslation MicrosoftTranslation
+	err = xml.NewDecoder(resp.Body).Decode(&microsoftTranslation)
+	if err != nil {
+		return nil, err
+	}
+
+	word.Translation = microsoftTranslation.Translation
+	log.Println("\n\n\nTranslation:", microsoftTranslation)
+	return word, nil
+}
+
+func getMicrosoftToken(c context.Context) (string, error) {
+	var tokenURL = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken?Subscription-Key="
+	var subscriptionKey = "07657cb89d4c4136b5165509a16c469a"
+
+	client := urlfetch.Client(c)
+	req, err := http.NewRequest("POST", tokenURL+subscriptionKey, nil)
+	if err != nil {
+		return "", err
+	}
+	// req.Header.Set("Content-Type", "application/json")
+	// req.Header.Set("Access-Control-Allow-Origin", "*")
+	// req.Header.Set("Accept", "application/jwt")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	log.Println("response Status:", resp.Status)
+	log.Println("response Headers:", resp.Header)
+	log.Println("request URL: ", resp.Request.URL)
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	token := buf.String()
+	// log.Println("response Body:", token)
+	return token, nil
 }
