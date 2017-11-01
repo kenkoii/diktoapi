@@ -1,0 +1,547 @@
+{{ template "header.tmpl" .}}
+
+<ul class="sandmswitch" data-bind="visible: user()!=null && isFavorited()">
+    <li><img src="../../assets/UI-assets/studying.png" alt=""></li>
+    <li>
+        <label class="swtch" data-bind="click: toggleStatus, css:{active: isMastered}">
+      <input type="checkbox" name="">
+    </label>
+    </li>
+    <li><img src="../../assets/UI-assets/mastered.png" alt=""></li>
+</ul>
+
+<section *ngIf="!load">
+    <div class="section fade-in-up">
+        <div class="container fit">
+            <div class="card fit ">
+                <header>
+                    <h2 class="text center white no-margin"><span data-bind="text: wordObj().text">word here</span><a data-bind="click: playAudio" style="display: initial">&nbsp;<i class="text white fa fa-volume-up"></i></a></h2>
+                    <p class="text center sunflower no-margin"><em data-bind="text: formattedPronunciation"></em> •
+                        <strong data-bind="text: wordObj().translation"></strong></p>
+                </header>
+                <div class="body">
+                    <div class="text-group">
+                        <h4 class="text white no-margin">M E A N I N G</h4>
+                        <div data-bind="foreach: wordObj().definition">
+                            <p class="text silver"><span class="text peterriver" data-bind="text: partOfSpeech">part of speech</span> • <span data-bind="text: definition">definition</span></p>
+                        </div>
+                    </div>
+                    <div class="text-group">
+                        <h4 class="text white no-margin">E X A M P L E</h4>
+                        <div data-bind="foreach: wordObj().examples">
+                            <p class="text silver"><span class="text white"> • </span><span data-bind="text: $rawData"></span></p>
+                        </div>
+                    </div>
+                    <div class="text-group">
+                        <h4 class="text white no-margin">S Y N O N Y M</h4>
+                        <p class="text silver" data-bind="foreach: wordObj().synonyms"><span data-bind="text: $rawData + ', '" [routerLink]="['/','word',synonym]"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<ul class="bottom-actions">
+    <li data-bind="visible: user()==null || user().error"></li>
+    <li data-bind="visible: isFavorited() && user()!=null && !user().error"><a class="button circle settings fav"  data-bind="click: togglePromptFave" (click)="togglePromptFave()" type="button" name="button"> 削除<!--<i class="fa fa-trash" aria-hidden="true"></i>--></a></li>
+    <li data-bind="visible: !isFavorited() && user()!=null && !user().error"><a class="button circle settings fav" data-bind="click: toggleFavorite" (click)="favoriteWord()" type="button" name="button"> 登録<!--<i class="fa fa-plus" aria-hidden="true"></i>--></a></li>
+    <!--<li *ngIf="(name | async) == 'Detail'"><a [routerLink]="['/',(user$ | async).id,(user$ | async).password,'list']" class="button circle back" type="button" name="button"><img src="../../assets/UI-assets/back-word.png" alt=""></a></li>-->
+    <li><a data-bind="click: goToWordList" (click)="playBackAudio()" [routerLink]="['/','list']" class="button circle back" type="button" name="button"><img src="../../assets/UI-assets/back-word.png" alt=""></a></li>
+    <!-- <li data-bind="visible: user()==null"><a (click)="playBackAudio()" href="uniwebview://close" class="button circle back" type="button" name="button"><img src="../../assets/UI-assets/back-word.png" alt=""></a></li> -->
+    <!--<li><a class="button circle settings" (click)="favoriteWord()" type="button" name="button"><i *ngIf="!isFavorited" class="fa fa-plus" aria-hidden="true"></i><i *ngIf="isFavorited" class="fa fa-minus" aria-hidden="true"></i></a></li>-->
+</ul>
+
+
+<div class="notification" data-bind="css: {active: isPromptFave}" [class.active]="isPromptFave">
+    <p class="text clouds">この言葉を削除してもよろしいですか`?</p>
+    <ul class="action">
+        <li>
+            <!--<button type="button" name="button" class="button normal del" (click)="unfavoriteWord()"><i class="fa fa-check"></i></button>-->
+            <button type="button" name="button" class="button normal del" data-bind="click: unfavoriteWord" (click)="unfavoriteWord()">YES</button>
+        </li>
+        <li>
+            <!--<button type="button" name="button" class="button danger cncl" (click)="togglePromptFave()"><i class="fa fa-remove"></i></button>-->
+            <button type="button" name="button" class="button danger cncl" data-bind="click: togglePromptFave" (click)="togglePromptFave()">NO</button>
+        </li>
+    </ul>
+</div>
+
+
+
+<script src="../../assets/js/jquery.min.js"></script>
+<script src="../../assets/js/knockout-3.4.2.js"></script>
+<script src="../../assets/js/howler.core.min.js"></script>
+<script src="../../assets/js/jwt-client.min.js"></script>
+<script src="../../assets/js/main.js"></script>
+{{if .data}}
+<script>
+    var data = {{.data}}
+    console.log(data);
+
+    const MICROSOFT_SUBSCRIPTION_KEY = '07657cb89d4c4136b5165509a16c469a';
+    const MICROSOFT_TOKEN_ENDPOINT = 'https://api.cognitive.microsoft.com/sts/v1.0/issueToken?Subscription-Key=';
+    const MICROSOFT_TRANSLATE_ENDPOINT = 'https://api.microsofttranslator.com/v2/http.svc/Translate?appid=Bearer%20';
+    const MICROSOFT_REQUEST_HEADER = {  'Content-Type': 'application/json',
+                                        'Access-Control-Allow-Origin' : '*',
+                                        'Accept': 'application/jwt' };
+
+    var getUrl = window.location;
+    var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[0];
+    const API_URL = baseUrl + 'api/v1/';
+
+
+    function AppViewModel() {
+        var self = this;
+        self.wordObj = ko.observable(data.word);
+        self.user = ko.observable(data.user);
+
+        if(self.wordObj().translation === '') {
+            getTranslation(self.wordObj().text);
+        }
+
+        self.isPromptFave = ko.observable(false);
+        self.isFavorited = ko.computed(function(){
+            console.log(self.user());
+            if(self.user()){
+                if(self.user().favorites) {
+                    var list = self.user().favorites.filter((favorite) => {
+                        return favorite.word == self.wordObj().text;
+                    });
+                    return list.length > 0;                   
+                }
+            }
+            return false;
+        });
+
+        self.isMastered = ko.computed(function(favorite){
+            if(self.user()){
+                self.user().favorites = self.user().favorites || [];
+                var list = self.user().favorites.filter((favorite) => {
+                    return favorite.word == self.wordObj().text;
+                });
+                if(list[0]) {
+                    return list[0].status == 'mastered';
+                }
+            }
+            return false;
+        });
+
+        // Computed data
+        self.formattedPronunciation = ko.computed(function() {
+            console.log(self.wordObj().text );
+            var pronunciation = '';
+            if(self.wordObj().pronunciation) {
+                pronunciation = self.wordObj().pronunciation[0].IPA || '';
+            }
+            return '(' + pronunciation + ')';
+        });
+
+        self.toggleStatus = function() {
+            toggleAudio.play();
+            if(self.user()){
+                self.user().favorites = self.user().favorites || [];
+                console.log("Toggle Status pressed");
+                var favorites = self.user().favorites.map(function(favorite){
+                    if(favorite && favorite.word === self.wordObj().text){
+                        if(favorite.status === 'studying') {
+                            favorite.status = 'mastered';
+                        } else {
+                            favorite.status = 'studying';
+                        }
+                    }
+                    return favorite;
+                });
+                console.log("ToggleStatus: ",favorites);
+                self.user().favorites = favorites;
+                self.updateUser().then(()=>{
+                    self.user(self.user());
+                })
+            }
+        }
+
+        self.toggleFavorite = function() {
+            clickAudio.play();
+            if(self.user()){
+                self.user().favorites = self.user().favorites || [];
+                if(self.isFavorited()) {
+                    self.removeFavorite(self.wordObj().text).then(() => {
+                        var favorites = self.user().favorites.filter((favorite) => {
+                            return favorite.word != self.wordObj().text;
+                        });
+                        console.log(favorites);
+                        self.user().favorites = favorites;
+                        self.user(self.user());
+                        console.log(self.user());
+                    });
+                } else {
+                    self.addFavorite(self.wordObj().text).then((favorite) => {
+                        self.user().favorites.push(favorite);
+                        console.log("Favorite added:", favorite);
+                        console.log(self.user().favorites);
+                        self.user(self.user());
+                        console.log(self.user());
+                    });
+                }
+
+            }
+        }
+
+        self.playAudio = function() {
+            console.log(self.wordObj().text);
+            const src = self.wordObj().audio.replace(/^http:\/\//i, 'https://');
+            if (self.wordObj) {
+                var audio = new Audio();
+                audio.src = src || '';
+                audio.addEventListener('play', () => {
+                    console.info("Audio Played! \nAudio source: ", src);
+                })
+                audio.load();
+
+                // Determine load status from readyState. 
+                if(audio.readyState === 4)  { 
+                    audio.play();
+                } else { 
+                    // Set the event notification of when it becomes playable state if it is not renewable state 
+                    audio.addEventListener('canplaythrough', function(e){ 
+                        audio.removeEventListener('canplaythrough', arguments.callee); 
+                        audio.play();
+                    }); 
+                }
+            }
+        }
+
+        self.unfavoriteWord = function() {
+            self.toggleFavorite();
+            self.isPromptFave(false);
+        }
+
+        self.togglePromptFave = function() {
+            var isPrompt = self.isPromptFave();
+            if(isPrompt) {
+                clickAudio.play();
+            } else {
+                promptAudio.play();
+            }
+            self.isPromptFave(!isPrompt);
+        }
+
+        self.goToWordList = function() {
+            backAudio.play();
+            if(self.user()){
+                if(!self.user().error) {
+                    var getUrl = window.location;
+                    var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[0];
+                    var url = baseUrl + 'list/' + self.user().id + '/' + self.user().password;
+                    console.log('link: ', url)
+                    window.location.href = url;
+                }
+            } else {
+                window.location.href = 'uniwebview://close';
+            }
+        };
+
+
+        self.addFavorite = function(word) {
+            
+            const params = JSON.stringify({
+                    id: word,
+                    userid: self.user().id + "",
+                    password: self.user().password + ""
+                });
+            console.log(params);
+            return $.ajax({
+                url: API_URL + 'favorite/frontend',
+                type: 'POST',
+                data: params,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function(result) {
+                    // self.user(result);
+                    console.log("Ajax Done!");
+                    return result;
+                }
+            });
+        }
+
+        self.removeFavorite = function(word) {
+            const params = JSON.stringify({
+                    id: word,
+                    userid: self.user().id + "",
+                    password: self.user().password + ""
+                });
+            console.log(params);
+            return $.ajax({
+                url: API_URL + 'favorite/frontend/remove',
+                type: 'POST',
+                data: params,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function(result) {
+                    // self.user(result);
+                    console.log("Ajax Done!");
+                    return result;
+                }
+            });
+        }
+
+        self.updateUser = function() {
+            console.log("User Object: ", self.user());
+            return $.ajax({
+                url: API_URL + 'users/' + self.user().id,
+                type: 'PUT',
+                data: JSON.stringify(self.user()),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function(result) {
+                    console.log(result);
+                    return result;
+                },
+                error: function(err){
+                    console.log(err);
+                }
+            });
+        }
+
+        function updateWord(word) {
+            return $.ajax({
+                url: API_URL + 'words/' + word,
+                type: 'put',
+                data: JSON.stringify(self.wordObj()),
+                headers: MICROSOFT_REQUEST_HEADER,
+                success: function(data){
+                    console.log(data);
+                }
+            });
+        }
+
+        function getTranslation(word) {
+            const jwt = JWT.get();
+            if(jwt === null) {
+                getMicrosoftAccessToken().then(()=>{
+                    getMicrosoftTranslation(word);
+                });
+            } else {
+                if(JWT.validate(jwt)){
+                    console.log(jwt);
+                    getMicrosoftTranslation(word);
+                } else {
+                    getMicrosoftAccessToken().then(()=>{
+                        getMicrosoftTranslation(word);
+                    });
+                }
+            }
+        }
+
+        function getMicrosoftTranslation(word) {
+            const request = MICROSOFT_TRANSLATE_ENDPOINT + JWT.get() + '&text=' + word + '&to=' + 'ja';
+            return $.get(request, function(data) {
+                console.log(data);
+                const parser = new DOMParser();
+                const xmlData = parser.parseFromString(data, 'application/xml');
+                console.log(xmlData);
+                self.wordObj().translation = data.getElementsByTagName('string')[0].innerHTML;
+                self.wordObj(self.wordObj());
+                updateWord(self.wordObj().text);
+                return data;
+            });
+        }
+
+        function getMicrosoftAccessToken() {
+            return $.ajax({
+                url: MICROSOFT_TOKEN_ENDPOINT + MICROSOFT_SUBSCRIPTION_KEY,
+                type: 'post',
+                data: {},
+                headers: MICROSOFT_REQUEST_HEADER,
+                success: function(data){
+                    var jwtValue = data;
+                    JWT.keep(jwtValue);
+                    console.log(data);
+                }
+            });
+        }
+    }
+
+ 
+    // Activates knockout.js
+    ko.applyBindings(new AppViewModel());
+    $(document).ready(function(){
+        location.href = 'uniwebview://success';
+    });
+</script> 
+{{end}}
+
+<style>
+    .r {
+        left: 65px !important;
+        padding-top: 10px;
+    }
+
+    .notification {
+        position: fixed;
+        bottom: -300%;
+        transition: all 0.3s ease-in-out;
+        background: #614138;
+        border: 5px solid #d9ab7e;
+        padding: 20px 15px;
+        width: 100%;
+        z-index: 110;
+    }
+
+    .notification.active {
+        bottom: 0;
+    }
+
+    .notification p {
+        text-align: center;
+    }
+
+    .notification .action {
+        display: block;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+    }
+
+    .notification .action:after {
+        content: " ";
+        display: block;
+        clear: both;
+    }
+
+    .notification .action li {
+        width: 50%;
+        float: left;
+        display: inline-block;
+        padding: 0px 10px;
+    }
+
+    .notification .action li button {
+        margin: 0;
+        width: 100%;
+    }
+
+    .del,
+    .cncl {
+        background: url(../../assets/UI-assets/notification-button.png);
+        background-size: 100% 100%;
+        background-position: center;
+        box-shadow: none;
+        margin: 0;
+        border-radius: 3px;
+    }
+
+    .fav {
+        background: url(../../assets/UI-assets/back-button.png) !important;
+        background-size: 77px 100% !important;
+        background-position: center;
+        width: 77px !important;
+        border-radius: 0px !important;
+        box-shadow: none !important;
+    }
+
+    .close {
+        box-shadow: none !important;
+        background: url(../../assets/UI-assets/button_close.png);
+        background-position: center;
+        background-size: 100% 100%;
+        color: transparent;
+        margin: 0 auto !important;
+    }
+
+    .back {
+        box-shadow: none !important;
+        background: url(../../assets/UI-assets/back-button.png) !important;
+        background-size: 100% 100%;
+        background-position: center;
+        background-repeat: no-repeat;
+        color: transparent;
+        height: 50px !important;
+        width: 100px !important;
+        margin: 0 auto !important;
+        border-radius: 3px !important;
+        box-shadow: none !important;
+    }
+
+    .back img {
+        height: 25px;
+        width: 55px;
+    }
+
+    .settings {
+        background: url(../../assets/UI-assets/button_green.png);
+        background-size: 100% 100%;
+        background-position: center;
+        box-shadow: none;
+        margin: 0 auto !important;
+        border-radius: 3px;
+    }
+
+    .card {
+        background: #1b4d33;
+        border: 5px solid #0d2b1f !important;
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    .container {
+        height: 100%;
+    }
+
+    .sandmswitch {
+        margin: 0px auto;
+        padding: 0;
+        width: 100%;
+        position: absolute;
+        top: 43px;
+        background: #d9ab7e;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+    }
+
+    .sandmswitch li {
+        height: 48px !important;
+        padding: 10px 0px;
+        vertical-align: center;
+        text-align: center;
+        color: #fff;
+        width: 33.33%;
+        float: left;
+        display: inline-block;
+    }
+
+    .sandmswitch li img {
+        width: 60px;
+        height: auto;
+    }
+
+    .button {
+        margin: 0;
+    }
+
+    .text-group {
+        margin: 30px 0px;
+    }
+
+    .text-group p {
+        margin: 20px 0px;
+    }
+
+    .grab-center {
+        position: relative;
+        right: 0;
+        left: 0;
+        margin: 0 auto;
+        width: 85px;
+        height: 50px;
+    }
+
+    @media (max-width: 1200px) {
+        .card {
+            border: 0;
+            border-radius: 0px;
+        }
+    }
+</style>
+
+
