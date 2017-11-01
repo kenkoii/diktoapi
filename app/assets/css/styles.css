@@ -75,7 +75,8 @@ section {
     width: 100% !important; } }
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Poppins', sans-serif; }
-  h1 span, h2 span, h3 span, h4 span, h5 span, h6 span {
+  /* h1 span, h2 span, h3 span, h4 span, h5 span, h6 span { */
+  h1 span, h3 span, h4 span, h5 span, h6 span {
     font-size: 14px;
     color: #bdc3c7;
     font-family: 'Open Sans', sans-serif; }

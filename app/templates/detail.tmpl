@@ -15,7 +15,7 @@
         <div class="container fit">
             <div class="card fit ">
                 <header>
-                    <h2 class="text center white no-margin" data-bind="text: wordObj().text"><a (click)="playAudio()" style="display: initial"><i class="text white fa fa-volume-up"></i></a></h2>
+                    <h2 class="text center white no-margin"><span data-bind="text: wordObj().text">word here</span><a data-bind="click: playAudio" style="display: initial">&nbsp;<i class="text white fa fa-volume-up"></i></a></h2>
                     <p class="text center sunflower no-margin"><em data-bind="text: formattedPronunciation"></em> •
                         <strong data-bind="text: wordObj().translation"></strong></p>
                 </header>
@@ -72,6 +72,7 @@
 <script src="../../assets/js/jquery.min.js"></script>
 <script src="../../assets/js/knockout-3.4.2.js"></script>
 <script src="../../assets/js/howler.core.min.js"></script>
+<script src="../../assets/js/jwt-client.min.js"></script>
 <script src="../../assets/js/main.js"></script>
 {{if .data}}
 <script>
@@ -183,6 +184,30 @@
                     });
                 }
 
+            }
+        }
+
+        self.playAudio = function() {
+            console.log(self.wordObj().text);
+            const src = self.wordObj().audio.replace(/^http:\/\//i, 'https://');
+            if (self.wordObj) {
+                var audio = new Audio();
+                audio.src = src || '';
+                audio.addEventListener('play', () => {
+                    console.info("Audio Played! \nAudio source: ", src);
+                })
+                audio.load();
+
+                // Determine load status from readyState. 
+                if(audio.readyState === 4)  { 
+                    audio.play();
+                } else { 
+                    // Set the event notification of when it becomes playable state if it is not renewable state 
+                    audio.addEventListener('canplaythrough', function(e){ 
+                        audio.removeEventListener('canplaythrough', arguments.callee); 
+                        audio.play();
+                    }); 
+                }
             }
         }
 
