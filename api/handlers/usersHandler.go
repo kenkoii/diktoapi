@@ -20,6 +20,7 @@ func GetUserEndpoint(c *gin.Context) {
 	user, err := models.GetUser(ctx, id, password)
 	if err != nil {
 		LogErrorGin(c, err)
+		return
 	}
 	c.JSON(200, user)
 }

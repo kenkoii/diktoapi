@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -162,11 +163,13 @@ func GetUser(c context.Context, id int64, password int64) (interface{}, error) {
 				return nil, err
 			}
 		default:
-			return ErrorMessage{Message: "user not found"}, nil
+			// return ErrorMessage{Message: "user not found"}, nil
+			return nil, errors.New("User Not Found")
 		}
 	}
 	if user.Password != password {
-		return ErrorMessage{Message: "password mismatch"}, nil
+		// return ErrorMessage{Message: "password mismatch"}, nil
+		return nil, errors.New("Password mismatch")
 	}
 	return &user, nil
 }
