@@ -17,9 +17,11 @@ func ListHandler(c *gin.Context) {
 	ctx := appengine.NewContext(c.Request)
 	user, err := models.GetUser(ctx, id, password)
 	if err != nil {
-		LogErrorGin(c, err)
+		// LogErrorGin(c, err)
+		RenderResult(c, gin.H{"error": err.Error(), "code": http.StatusForbidden}, "error.tmpl", http.StatusForbidden)
+		return
 	}
-	RenderResult(c, user, "list.tmpl", gin.H{})
+	RenderResult(c, user, "list.tmpl", http.StatusOK)
 }
 
 func SettingsHandler(c *gin.Context) {
@@ -30,7 +32,7 @@ func SettingsHandler(c *gin.Context) {
 	if err != nil {
 		LogErrorGin(c, err)
 	}
-	RenderResult(c, user, "settings.tmpl", gin.H{})
+	RenderResult(c, user, "settings.tmpl", http.StatusOK)
 }
 
 func DetailHandler(c *gin.Context) {
@@ -43,27 +45,31 @@ func DetailHandler(c *gin.Context) {
 	ctx := appengine.NewContext(c.Request)
 	w, err := models.GetWord(ctx, word)
 	if err != nil {
-		LogErrorGin(c, err)
+		// LogErrorGin(c, err)
+		RenderResult(c, gin.H{"error": "Word not found", "code": http.StatusNotFound}, "error.tmpl", http.StatusNotFound)
+		return
 	}
 	if id != 0 && password != 0 {
 		user, err = models.GetUser(ctx, id, password)
+		PrintObject(user)
 		if err != nil {
-			LogErrorGin(c, err)
+			// LogErrorGin(c, err)
+			RenderResult(c, gin.H{"error": err.Error(), "code": http.StatusForbidden}, "error.tmpl", http.StatusForbidden)
+			return
 		}
 	}
-	RenderResult(c, gin.H{"word": w, "user": user}, "detail.tmpl", gin.H{})
+	RenderResult(c, gin.H{"word": w, "user": user}, "detail.tmpl", http.StatusOK)
 }
 
-func RenderResult(c *gin.Context, results interface{}, template string, params gin.H) {
+func RenderResult(c *gin.Context, results interface{}, template string, statusCode int) {
 	PrintObject(results)
 	c.HTML(
-		http.StatusOK,
+		statusCode,
 		template,
 		gin.H{
 			"title":  "Main website",
 			"method": "POST",
 			"data":   results,
-			"params": params,
 		})
 }
 

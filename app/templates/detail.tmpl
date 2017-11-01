@@ -1,6 +1,7 @@
 {{ template "header.tmpl" .}}
 
-<ul class="sandmswitch" data-bind="visible: user()!=null && isFavorited()">
+<div class=loader style="display: block;" data-bind="visible: false"></div>
+<ul class="sandmswitch" style="display: none;" data-bind="visible: user()!=null && isFavorited()">
     <li><img src="../../assets/UI-assets/studying.png" alt=""></li>
     <li>
         <label class="swtch" data-bind="click: toggleStatus, css:{active: isMastered}">
@@ -10,7 +11,7 @@
     <li><img src="../../assets/UI-assets/mastered.png" alt=""></li>
 </ul>
 
-<section *ngIf="!load">
+<section style="display: none;" data-bind="visible: true">
     <div class="section fade-in-up">
         <div class="container fit">
             <div class="card fit ">
@@ -42,7 +43,7 @@
     </div>
 </section>
 
-<ul class="bottom-actions">
+<ul class="bottom-actions" style="display: none;" data-bind="visible: true">
     <li data-bind="visible: user()==null || user().error"></li>
     <li data-bind="visible: isFavorited() && user()!=null && !user().error"><a class="button circle settings fav"  data-bind="click: togglePromptFave" (click)="togglePromptFave()" type="button" name="button"> 削除<!--<i class="fa fa-trash" aria-hidden="true"></i>--></a></li>
     <li data-bind="visible: !isFavorited() && user()!=null && !user().error"><a class="button circle settings fav" data-bind="click: toggleFavorite" (click)="favoriteWord()" type="button" name="button"> 登録<!--<i class="fa fa-plus" aria-hidden="true"></i>--></a></li>
@@ -53,7 +54,7 @@
 </ul>
 
 
-<div class="notification" data-bind="css: {active: isPromptFave}" [class.active]="isPromptFave">
+<div class="notification" data-bind="css: {active: isPromptFave}" [class.active]="isPromptFave" style="display: none;" data-bind="visible: true">
     <p class="text clouds">この言葉を削除してもよろしいですか`?</p>
     <ul class="action">
         <li>

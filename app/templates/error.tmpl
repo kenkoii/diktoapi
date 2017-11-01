@@ -1,0 +1,277 @@
+{{ template "header.tmpl" .}}
+
+<div class=loader style="display: block;" data-bind="visible: false"></div>
+<section style="display: none;" data-bind="visible: true">
+    <div class="section fade-in-up">
+        <div class="container fit">
+            <div class="card fit ">
+                <header>
+                    <h2 class="text center white no-margin">Error <span data-bind="text: code">404</span></h2>
+                    <p class="text center sunflower no-margin"><em data-bind="text: error"></em></p>
+                    <div class="image">
+                        <img src="../../assets/img/Card65.png" width="300px" alt="404: Word not found">
+                    </div>
+                </header>
+                    
+            </div>
+        </div>
+    </div>
+</section>
+
+<ul class="bottom-actions" style="display: none;" data-bind="visible: true">
+    <li data-bind="visible: true"></li>
+    <!--<li *ngIf="(name | async) == 'Detail'"><a [routerLink]="['/',(user$ | async).id,(user$ | async).password,'list']" class="button circle back" type="button" name="button"><img src="../../assets/UI-assets/back-word.png" alt=""></a></li>-->
+    <li><a data-bind="click: goToWordList" class="button circle back" type="button" name="button"><img src="../../assets/UI-assets/back-word.png" alt=""></a></li>
+    <!-- <li data-bind="visible: user()==null"><a (click)="playBackAudio()" href="uniwebview://close" class="button circle back" type="button" name="button"><img src="../../assets/UI-assets/back-word.png" alt=""></a></li> -->
+    <!--<li><a class="button circle settings" (click)="favoriteWord()" type="button" name="button"><i *ngIf="!isFavorited" class="fa fa-plus" aria-hidden="true"></i><i *ngIf="isFavorited" class="fa fa-minus" aria-hidden="true"></i></a></li>-->
+</ul>
+
+
+<script src="../../assets/js/jquery.min.js"></script>
+<script src="../../assets/js/knockout-3.4.2.js"></script>
+<script src="../../assets/js/howler.core.min.js"></script>
+<script src="../../assets/js/jwt-client.min.js"></script>
+<script src="../../assets/js/main.js"></script>
+{{if .data}}
+<script>
+    var data = {{.data}}
+    console.log(data);
+    var getUrl = window.location;
+    var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[0];
+    const API_URL = baseUrl + 'api/v1/';
+    
+    function getUrlParams() {
+        var result = {};
+        var params = (window.location.search.split('?')[1] || '').split('&');
+        for(var param in params) {
+            if (params.hasOwnProperty(param)) {
+                paramParts = params[param].split('=');
+                result[paramParts[0]] = decodeURIComponent(paramParts[1] || "");
+            }
+        }
+        return result;
+    }
+
+    function AppViewModel() {
+        var self = this;
+        self.user = ko.observable(data.user);
+        self.error = ko.observable(data.error);
+        self.code = ko.observable(data.code);
+
+
+        self.goToWordList = function() {
+            backAudio.play();
+            var params = getUrlParams();
+            if(params['id'] && params['password']) {
+                
+                var getUrl = window.location;
+                var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[0];
+                var url = baseUrl + 'list/' + params['id'] + '/' + params['password'];
+                    console.log('link: ', url)
+                    window.location.href = url;
+            }
+            // if(self.user()){
+            //     if(!self.user().error) {
+                    
+            //         var getUrl = window.location;
+            //         var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[0];
+            //         // var url = baseUrl + 'list/' + self.user().id + '/' + self.user().password;
+            //         var url = baseUrl + 'list/' + params["id"] + '/' + params["password"];
+            //         console.log('link: ', url)
+            //         window.location.href = url;
+            //     }
+            // } 
+            else {
+                window.location.href = 'uniwebview://close';
+            }
+        };
+    }
+
+    // Activates knockout.js
+    ko.applyBindings(new AppViewModel());
+    $(document).ready(function(){
+        location.href = 'uniwebview://success';
+    });
+</script> 
+{{end}}
+
+<style>
+    .r {
+        left: 65px !important;
+        padding-top: 10px;
+    }
+
+    .notification {
+        position: fixed;
+        bottom: -300%;
+        transition: all 0.3s ease-in-out;
+        background: #614138;
+        border: 5px solid #d9ab7e;
+        padding: 20px 15px;
+        width: 100%;
+        z-index: 110;
+    }
+
+    .notification.active {
+        bottom: 0;
+    }
+
+    .notification p {
+        text-align: center;
+    }
+
+    .notification .action {
+        display: block;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+    }
+
+    .notification .action:after {
+        content: " ";
+        display: block;
+        clear: both;
+    }
+
+    .notification .action li {
+        width: 50%;
+        float: left;
+        display: inline-block;
+        padding: 0px 10px;
+    }
+
+    .notification .action li button {
+        margin: 0;
+        width: 100%;
+    }
+
+    .del,
+    .cncl {
+        background: url(../../assets/UI-assets/notification-button.png);
+        background-size: 100% 100%;
+        background-position: center;
+        box-shadow: none;
+        margin: 0;
+        border-radius: 3px;
+    }
+
+    .fav {
+        background: url(../../assets/UI-assets/back-button.png) !important;
+        background-size: 77px 100% !important;
+        background-position: center;
+        width: 77px !important;
+        border-radius: 0px !important;
+        box-shadow: none !important;
+    }
+
+    .close {
+        box-shadow: none !important;
+        background: url(../../assets/UI-assets/button_close.png);
+        background-position: center;
+        background-size: 100% 100%;
+        color: transparent;
+        margin: 0 auto !important;
+    }
+
+    .back {
+        box-shadow: none !important;
+        background: url(../../assets/UI-assets/back-button.png) !important;
+        background-size: 100% 100%;
+        background-position: center;
+        background-repeat: no-repeat;
+        color: transparent;
+        height: 50px !important;
+        width: 100px !important;
+        margin: 0 auto !important;
+        border-radius: 3px !important;
+        box-shadow: none !important;
+    }
+
+    .back img {
+        height: 25px;
+        width: 55px;
+    }
+
+    .settings {
+        background: url(../../assets/UI-assets/button_green.png);
+        background-size: 100% 100%;
+        background-position: center;
+        box-shadow: none;
+        margin: 0 auto !important;
+        border-radius: 3px;
+    }
+
+    .card {
+        background: #1b4d33;
+        border: 5px solid #0d2b1f !important;
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    .container {
+        height: 100%;
+    }
+
+    .sandmswitch {
+        margin: 0px auto;
+        padding: 0;
+        width: 100%;
+        position: absolute;
+        top: 43px;
+        background: #d9ab7e;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+    }
+
+    .sandmswitch li {
+        height: 48px !important;
+        padding: 10px 0px;
+        vertical-align: center;
+        text-align: center;
+        color: #fff;
+        width: 33.33%;
+        float: left;
+        display: inline-block;
+    }
+
+    .sandmswitch li img {
+        width: 60px;
+        height: auto;
+    }
+
+    .button {
+        margin: 0;
+    }
+
+    .text-group {
+        margin: 30px 0px;
+    }
+
+    .text-group p {
+        margin: 20px 0px;
+    }
+
+    .grab-center {
+        position: relative;
+        right: 0;
+        left: 0;
+        margin: 0 auto;
+        width: 85px;
+        height: 50px;
+    }
+
+    .image {
+        display:block;
+        margin:auto;    
+        margin-top: -80px;
+    }
+
+    @media (max-width: 1200px) {
+        .card {
+            border: 0;
+            border-radius: 0px;
+        }
+    }
+</style>
+
+
