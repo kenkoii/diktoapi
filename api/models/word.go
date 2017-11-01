@@ -420,12 +420,11 @@ func searchWord(c context.Context, word *Word) (*Word, error) {
 	var p Pron
 	err = json.NewDecoder(r).Decode(&w)
 	if err != nil {
-		// log.Println(w)
-		// return nil, err
 		r = bytes.NewBuffer(b)
 		err = json.NewDecoder(r).Decode(&p)
 		if err != nil {
 			log.Println("error: " + err.Error())
+			return nil, err
 		}
 		word.Pronunciation = append(word.Pronunciation, Pronunciation{PartOfSpeech: "all", IPA: p.Pronunciation})
 	}
@@ -445,13 +444,6 @@ func searchWord(c context.Context, word *Word) (*Word, error) {
 		// log.Printf("key[%s] value[%s]\n", k, v)
 		word.Pronunciation = append(word.Pronunciation, Pronunciation{PartOfSpeech: k, IPA: v})
 	}
-
-	// word, err = searchAudio(c, word)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// return searchTranslation(c, word)
 
 	return searchAudio(c, word)
 }
@@ -481,6 +473,9 @@ func searchAudio(c context.Context, word *Word) (*Word, error) {
 	// err = xml.Unmarshal(data, &eq)
 	if err != nil {
 		return nil, err
+	}
+	if len(eq.Entry) == 0 {
+		return word, nil
 	}
 	log.Println(eq.Entry[0].Sound.Wav.Content)
 	var fileName = eq.Entry[0].Sound.Wav.Content
