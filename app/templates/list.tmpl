@@ -1,7 +1,7 @@
 {{ template "header.tmpl" .}}
 <div class=loader style="display: block;" data-bind="visible: false"></div>
 <div style="display: none;" data-bind="visible: true">
-    <!-- <a id="uniwebview" href="uniwebview://success"></a> -->
+    <a style="display: none;" id="uniwebview" href="uniwebview://success"></a>
     <nav class="navigation fixed top fit no-border" >
     <ul class="nav">
         <li data-bind="if: selected()=='favorites'" class="title"><a class="xlink"><img class="img-title" src="../../assets/UI-assets/Mytango.png" alt=""></a></li>
@@ -202,6 +202,7 @@
         self.isPromptFave = ko.observable(false);
         self.selectedWord = ko.observable({});
         checkUser();
+        
 
         self.user.subscribe((user) => {
             console.log("Change Detected");
@@ -657,12 +658,17 @@
 
         // Activates knockout.js
         ko.applyBindings(new AppViewModel());
+
+
+
     }( this, ko ) );
 
     
     $(document).ready(function(){
-        // $('#uniwebview')[0].click();
-        location.href = 'uniwebview://success';
+        $('#uniwebview')[0].click();
+        // window.location.href = 'uniwebview://success';
+        // $.get("uniwebview://success");
+        // alert("Uniwebview trigger")
     });
 
 </script>
