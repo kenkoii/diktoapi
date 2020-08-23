@@ -1,0 +1,960 @@
+{{ template "header.tmpl" .}}
+<div class=loader style="display: block;" data-bind="visible: false"></div>
+<div style="display: none;" data-bind="visible: true">
+    <a style="display: none;" id="uniwebview" href="uniwebview://success"></a>
+    <nav class="navigation fixed top fit no-border" >
+    <ul class="nav">
+        <li data-bind="if: selected()=='favorites'" class="title"><a class="xlink"><img class="img-title" src="/assets/UI-assets/Mytango.png" alt=""></a></li>
+        <li data-bind="if: selected()=='settings'" class="title"><a class="xlink"><img class="img-title" src="/assets/UI-assets/setting.png" alt=""></a></li> 
+    </ul>
+    </nav>
+    <ul class="bottom-actions">
+    <li></li>
+    <!--<li *ngIf="(name | async) == 'Favorites' || (name | async) == 'Splash'"><a href="uniwebview://close" class="button circle close" type="button" name="button">.</a></li>-->
+    <li data-bind="visible: selected()=='favorites'"><a data-bind="click: close" class="button circle close" type="button" name="button">.</a></li>
+    <li data-bind="visible: selected()=='favorites'"><a data-bind="click: switchWindow" (click)="playClickSound()" [routerLink]="['settings']" class="button circle settings" type="button" name="button"><i class="fa fa-cog" aria-hidden="true"></i></a></li>
+    <li data-bind="visible: selected()=='settings'"><a data-bind="click: switchWindow" class="button circle back" type="button" name="button"><img src="/assets/UI-assets/back-word.png" alt=""></a></li>   
+    </ul>
+
+    <div class="notification" data-bind="css: {active: isPromptFave}" [class.active]="isPromptFave">
+        <p class="text clouds"><span data-bind="text: '「' + selectedWord().word + '」'"></span>を削除してもよろしいですか？</p>
+        <ul class="action">
+            <li>
+                <!--<button type="button" name="button" class="button normal del" (click)="unfavoriteWord()"><i class="fa fa-check"></i></button>-->
+                <button type="button" name="button" class="button normal del" data-bind="click: unfavoriteWord" (click)="unfavoriteWord()">YES</button>
+            </li>
+            <li>
+                <!--<button type="button" name="button" class="button danger cncl" (click)="togglePromptFave()"><i class="fa fa-remove"></i></button>-->
+                <button type="button" name="button" class="button danger cncl" data-bind="click: togglePromptFave" (click)="togglePromptFave()">NO</button>
+            </li>
+        </ul>
+    </div>
+
+    <div data-bind="if: selected() == 'favorites'">
+        <section >
+            <ul class="tab scroll">
+                <li data-bind="css: { active : isActive('mastered') }">
+                    <a data-bind="click: function() { setActiveTab('mastered') }"><img src="/assets/UI-assets/mastered.png" alt=""><span data-bind="text: mastered().length">0</span></a>
+
+                </li>
+                <li data-bind="css: { active : isActive('studying') }">
+                    <a data-bind="click: function() { setActiveTab('studying') }"><img src="/assets/UI-assets/studying.png" alt=""><span data-bind="text: studying().length">0</span></a>
+
+                </li>
+            </ul>
+            <div class="hidden" data-bind="css: { active : isActive('mastered') }">
+                <div class="section">
+                    <div class="container fit">
+                        <ul id="mastered" class="list" data-bind="event: {scroll: onStudyingScroll}"
+                            infinite-scroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="100" (scrolled)="onStudyingScroll()"
+                            [scrollWindow]="false">
+                            <li class="item animate fade-in-up" data-bind="foreach: mastered">
+                                <div #div style="padding: 0; background-color: #0f3320" class="content">
+                                    <div data-bind="panmove: onPan,
+                                                    panend: onPanEnd,
+                                                    element: el,
+                                                    style: { marginLeft: x, marginRight: x*-1, opacity: alpha},
+                                                    css: {single: !$parent.user().settings.showTranslation},
+                                                    click: goToWord" 
+                                        (click)="playClickAudio()" class="detail" [routerLink]="['/','word',favorite.word]" [ngClass]="{'single': !(settings | async).showTranslation}">
+                                        <h4 class="text white no-margin"><span class="text white word" style="font-family: 'Poppins Bold', sans-serif; font-size: 19px;" data-bind="text: word"></span>&nbsp;<span *ngIf="word && (settings | async).showPronunciation" data-bind="if: $parent.user().settings.showPronunciation"><span class="text sunflower" data-bind="text: formattedPronunciation"></span></span>
+                                            <span data-bind="if: $parent.user().settings.showTime"><span class="text sunflower" *ngIf="(settings | async).showTime"> • <span class="text sunflower" data-bind="text: timeCreated">1m</span></span></span>
+                                        </h4>
+                                        <p class="text white no-margin">
+                                            <span data-bind="if: $parent.user().settings.showTranslation"><span *ngIf="word && (settings | async).showTranslation" data-bind="text: wordObj().translation"></span></span>
+                                        </p>
+                                        <div data-bind="style: {right: actX }" class="action">
+                                            <ul>
+                                                <li data-bind="click: playAudio, clickBubble: false"><a><i class="fa fa-volume-up text text size-normal white" aria-hidden="true"></i></a></li>
+                                                <li data-bind="click: $parent.togglePromptFave, clickBubble: false"><a><i class="fa fa-remove text text size-normal alizarin" aria-hidden="true"></i></a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="hidden" data-bind="css: { active : isActive('studying') }">
+                <div class="section">
+                    <div class="container fit">
+                        <ul id="studying" class="list" data-bind="event: {scroll: onStudyingScroll}"
+                            infinite-scroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="100" (scrolled)="onStudyingScroll()"
+                            [scrollWindow]="false">
+                            <li class="item animate fade-in-up" data-bind="foreach: studyingBuffer">
+                                <div #div style="padding: 0; background-color: #0f3320" class="content">
+                                    <div data-bind="panmove: onPan, 
+                                                    panend: onPanEnd, 
+                                                    element: el, 
+                                                    style: { marginLeft: x, marginRight: x*-1, opacity: alpha}, 
+                                                    css: {single: !$parent.user().settings.showTranslation},
+                                                    click: goToWord, clickBubble: false" 
+                                        (click)="playClickAudio()" class="detail" [routerLink]="['/','word',favorite.word]" [ngClass]="{'single': !(settings | async).showTranslation}">
+                                        <h4 class="text white no-margin"><span class="text white" style="font-family: 'Poppins Bold', sans-serif; font-size: 19px;" data-bind="text: word"></span>&nbsp;<span *ngIf="word && (settings | async).showPronunciation" data-bind="if: $parent.user().settings.showPronunciation"><span class="text sunflower" data-bind="text: formattedPronunciation"></span></span>
+                                            <span data-bind="if: $parent.user().settings.showTime"><span class="text sunflower" *ngIf="(settings | async).showTime"> • <span class="text sunflower" data-bind="text: timeCreated">1m</span></span><span>
+                                        </h4>
+                                        <p class="text white no-margin">
+                                            <span data-bind="if: $parent.user().settings.showTranslation"><span data-bind="text: wordObj().translation"></span></span>
+                                        </p>
+                                        <div data-bind="style: {right: actX }" class="action">
+                                            <ul>
+                                                <li data-bind="click: playAudio, clickBubble: false"><a><i class="fa fa-volume-up text text size-normal white" aria-hidden="true"></i></a></li>
+                                                <li data-bind="click: $parent.togglePromptFave, clickBubble: false"><a><i class="fa fa-remove text text size-normal alizarin" aria-hidden="true"></i></a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div data-bind="if: selected() == 'settings'">
+        <section>
+        <div class="section fade-in-up">
+            <div class="container">
+            <ul class="list">
+                <li class="item ">
+                    <div class="detail single">
+                    <p class="text white no-margin">AからZまで並べ替え</p>
+                    </div>
+                    <div class="action btn">
+                    <label class="swtch" data-bind="click: toggleSort, css: {active: user().settings.sortAZ}">
+                        <input type="checkbox" name="">
+                    </label>
+                    </div>
+                </li>
+                <li class="item">
+                    <div class="detail single">
+                    <p class="text white no-margin">発音を表示する</p>
+                    </div>
+                    <div class="action btn">
+                    <label class="swtch" data-bind="click: togglePronunciation, css: {active: user().settings.showPronunciation}">
+                        <input type="checkbox" name="">
+                    </label>
+                    </div>
+                </li>
+                <li class="item">
+                    <div class="detail single">
+                    <p class="text white no-margin">翻訳を表示する</p>
+                    </div>
+                    <div class="action btn">
+                    <label class="swtch" data-bind="click: toggleTranslation, css: {active: user().settings.showTranslation}">
+                        <input type="checkbox" name="">
+                    </label>
+                    </div>
+                </li>
+                <li class="item">
+                    <div class="detail single">
+                    <p class="text white no-margin">登録時刻を表示する</p>
+                    </div>
+                    <div class="action btn">
+                    <label class="swtch"  data-bind="click: toggleTime, css: {active: user().settings.showTime}">
+                        <input type="checkbox" name="">
+                    </label>
+                    </div>
+                </li>
+                </ul>
+            </div>
+        </div>
+        </section>
+    </div>
+
+</div>
+
+
+
+
+<script src="/assets/js/jquery.min.js"></script>
+<script src="/assets/js/knockout-3.4.2.js"></script>
+<script src="/assets/js/howler.core.min.js"></script>
+<script src="/assets/js/hammer.min.js"></script>
+<script src="/assets/js/main.js"></script>
+<script src="/assets/js/jwt-client.min.js"></script>
+<script src="/assets/js/timeago.min.js"></script>
+{{if .data}}
+<script>
+    var data = {{.data}}
+    console.log(data);
+    // const API_URL = 'https://diktoapi.appspot.com/api/v1/';
+    const MICROSOFT_SUBSCRIPTION_KEY = '07657cb89d4c4136b5165509a16c469a';
+    const MICROSOFT_TOKEN_ENDPOINT = 'https://api.cognitive.microsoft.com/sts/v1.0/issueToken?Subscription-Key=';
+    const MICROSOFT_TRANSLATE_ENDPOINT = 'https://api.microsofttranslator.com/v2/http.svc/Translate?appid=Bearer%20';
+    const MICROSOFT_REQUEST_HEADER = {  'Content-Type': 'application/json',
+                                        'Access-Control-Allow-Origin' : '*',
+                                        'Accept': 'application/jwt' };
+    var getUrl = window.location;
+    var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[0];
+    const API_URL = baseUrl + 'api/v1/';
+
+    function AppViewModel() { 
+        var self = this;
+        self.user = ko.observable(data);
+        self.activeTab = ko.observable("studying");
+        self.studying = ko.observableArray([]);
+        self.mastered = ko.observableArray([]);
+        self.studyingBuffer = ko.observableArray([]);
+        self.masteredBuffer = ko.observableArray([]);
+        self.selected = ko.observable("favorites");
+        self.isPromptFave = ko.observable(false);
+        self.selectedWord = ko.observable({});
+        checkUser();
+        
+
+        self.user.subscribe((user) => {
+            console.log("Change Detected");
+            self.updateUser();
+        });
+
+        self.setActiveTab = function(tab) {
+            if(self.activeTab() != tab){
+                tabsAudio.play();
+                self.activeTab(tab);
+            }
+            console.log(self.activeTab());
+        }
+
+        self.isActive = function(tab) {
+            return self.activeTab() == tab ? true : false;
+        }
+
+        self.removeFavorite = function(favorite) {
+            // console.log(favorite);
+            self.removeFavoriteAjax(favorite.word).then(() => {
+                console.log(favorite);
+                if(favorite.status === 'studying') {
+                    self.studying.remove(favorite);
+                } else {
+                    self.mastered.remove(favorite);
+                }
+                self.selectedWord({})
+            })
+        }
+
+
+        self.unfavoriteWord = function() {
+            self.removeFavorite(self.selectedWord());
+            self.isPromptFave(false);
+        }
+
+        self.togglePromptFave = function() {
+            var isPrompt = self.isPromptFave();
+            self.isPromptFave(!isPrompt);
+            self.selectedWord(this);
+        }
+
+
+        self.toggleFavorite = function(favorite) {
+            console.log("Toggle Favorite WordViewModel: ", favorite);
+            if(favorite.status === 'studying') {
+                favorite.status = 'mastered';
+                self.studying.remove(favorite)
+                self.mastered.push(favorite);
+            } else {
+                favorite.status = 'studying';
+                self.mastered.remove(favorite);
+                self.studying.push(favorite);
+            }
+            self.user().favorites.map(function(fav){
+                if(fav.word === favorite.word) {
+                    fav.status = fav.status === 'studying' ? 'mastered' : 'studying';
+                }
+                return fav;
+            });
+            self.user(self.user());
+            self.masteredBuffer(self.mastered())
+            self.studyingBuffer(self.studying())
+            console.log('Studying: ', self.studying());
+            console.log('Mastered: ', self.mastered());
+            console.log('User: ', self.user());
+        }
+
+        self.toggleSort = function() {
+            toggleAudio.play();
+            self.user().settings.sortAZ = !self.user().settings.sortAZ;
+            self.user(self.user());
+            console.log("ToggleSort pressed: ", self.user().settings.sortAZ);
+        }
+
+        self.togglePronunciation = function() {
+            toggleAudio.play();
+            self.user().settings.showPronunciation = !self.user().settings.showPronunciation;
+            self.user(self.user());
+            console.log("togglePronunciation pressed: ", self.user().settings.showPronunciation);
+        }
+
+        self.toggleTranslation = function() {
+            toggleAudio.play();
+            self.user().settings.showTranslation = !self.user().settings.showTranslation;
+            self.user(self.user());
+            console.log("toggleTranslation pressed: ", self.user().settings.showTranslation);
+        }
+
+        self.toggleTime = function() {
+            toggleAudio.play();
+            self.user().settings.showTime = !self.user().settings.showTime;
+            self.user(self.user());
+            console.log("toggleTime pressed: ", self.user().settings.showTime);
+        }
+
+        self.close = function() {
+            backAudio.play();
+            location.href = 'uniwebview://close';
+        }
+
+        self.switchWindow = function() {
+            clickAudio.play();
+            if(self.selected() == 'settings'){
+                self.selected('favorites');
+            } else {
+                self.selected('settings');
+            }
+        }
+
+        self.onStudyingScroll = function(data, event) {
+
+            // Fetch variables
+            var scrollTop = event.target.scrollTop;
+            var windowHeight = $('#studying').height();
+            var bodyHeight = $(document).height() - windowHeight;
+            var scrollPercentage = (scrollTop / bodyHeight);
+
+            // if the scroll is more than 90% from the top, load more content.
+            if(scrollPercentage > 0.7) {    
+                console.log('Scrolled!!!\n');
+                for (let i = 0; i < 1 && self.studyingBuffer().length < self.studying().length; i++) {
+                    console.log('Added: \n', self.studying()[self.studyingBuffer().length + i])
+                    self.studyingBuffer.push(self.studying()[self.studyingBuffer().length + i]);
+                }
+            }
+        }
+
+        self.onMasteredScroll = function(data, event) {
+
+            // Fetch variables
+            var scrollTop = event.target.scrollTop;
+            var windowHeight = $('#mastered').height();
+            var bodyHeight = $(document).height() - windowHeight;
+            var scrollPercentage = (scrollTop / bodyHeight);
+
+            // if the scroll is more than 90% from the top, load more content.
+            if(scrollPercentage > 0.7) {    
+                console.log('Scrolled!!!\n');
+                for (let i = 0; i < 1 && self.masteredBuffer().length < self.mastered().length; i++) {
+                    console.log('Added: \n', self.mastered()[self.masteredBuffer().length + i])
+                    self.studyingBuffer.push(self.mastered()[self.masteredBuffer().length + i]);
+                }
+            }
+        }
+
+        self.removeFavoriteAjax = function(word) {
+            const params = JSON.stringify({
+                    id: word,
+                    userid: self.user().id + "",
+                    password: self.user().password + ""
+                });
+            console.log(params);
+            return $.ajax({
+                url: API_URL + 'favorite/frontend/remove',
+                type: 'POST',
+                data: params,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function(result) {
+                    // self.user(result);
+                    console.log("Ajax Done!");
+                    console.log("Ajax Result: ", result);
+                    return result;
+                }
+            });
+        }
+
+        self.updateUser = function() {
+            console.log("User Object: ", self.user());
+            return $.ajax({
+                url: API_URL + 'users/' + self.user().id,
+                type: 'PUT',
+                data: JSON.stringify(self.user()),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function(result) {
+                    console.log(result);
+                    return result;
+                },
+                error: function(err){
+                    console.log(err);
+                }
+            });
+        }
+
+        function checkUser() {
+            self.studying(getStudying(self.user().favorites));
+            self.mastered(getMastered(self.user().favorites));
+            for (let i = 0; i < 10; i++) {
+                if (self.studying()[i]) {
+                    self.studyingBuffer.push(self.studying()[i]);
+                }
+                if (self.mastered()[i]) {
+                    self.masteredBuffer.push(self.mastered()[i]);
+                }
+            }
+        }
+
+         function getStudying(favorites) {
+            favorites = favorites || [];
+            return favorites.filter(function(favorite) {
+                return favorite.status == 'studying';
+            }).map(function(favorite) {
+                return new WordViewModel(favorite, self);
+            });
+        }
+
+        function getMastered(favorites) {
+            favorites = favorites || [];
+            return favorites.filter(function(favorite) {
+                return favorite.status == 'mastered';
+            }).map(function(favorite) {
+                return new WordViewModel(favorite, self);
+            });
+        }
+    }
+
+    function WordViewModel(favorite, parent) {
+        var self = this;
+
+
+        // Hammer JS variables
+        self.alpha = ko.observable(1);
+        self.x = ko.observable(0);
+        self.actX = ko.observable(0);
+        self.startX = ko.observable(0);
+
+        
+        self.word = favorite.word;
+        self.status = favorite.status;
+        self.created = favorite.created;
+
+        self.timeCreated = moment(self.created).fromNow();
+
+        self.el = ko.observable({});
+
+        self.wordObj = ko.observable({});
+        
+        getWord(self.word);
+
+        // Computed data
+        self.formattedPronunciation = ko.computed(function() {
+            console.log(self.wordObj().text );
+            var pronunciation = '';
+            if(self.wordObj().pronunciation) {
+                pronunciation = self.wordObj().pronunciation[0].IPA || '';
+            }
+            return '(' + pronunciation + ')';
+        });
+
+        self.goToWord = function() {
+            // clickAudio.addEventListener('play', () => {
+                
+            // }, false)
+            clickAudio.play();
+            // var getUrl = window.location;
+            //     var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[0];
+                var params = '?id=' + parent.user().id + '&password=' + parent.user().password;
+                var url = baseUrl + 'word/' + self.wordObj().text + params;
+                console.log('link: ', url)
+                window.location.href = url;
+        };
+
+
+        self.playAudio = function() {
+            console.log(self.wordObj().text);
+            const src = self.wordObj().audio.replace(/^http:\/\//i, 'https://');
+            if (self.wordObj) {
+                var audio = new Audio();
+                audio.src = src || '';
+                audio.addEventListener('play', () => {
+                    console.info("Audio Played! \nAudio source: ", src);
+                })
+                audio.load();
+
+                // Determine load status from readyState. 
+                if(audio.readyState === 4)  { 
+                    audio.play();
+                } else { 
+                    // Set the event notification of when it becomes playable state if it is not renewable state 
+                    audio.addEventListener('canplaythrough', function(e){ 
+                        audio.removeEventListener('canplaythrough', arguments.callee); 
+                        audio.play();
+                    }); 
+                }
+            }
+        }
+
+        self.onPan = function(data, event) {
+            event.preventDefault();
+            //PROBLEM : for some reason, offsetWidth 
+            element = self.el();
+            // element = event;
+            // console.log(element.offsetWidth);
+            // console.log(self);
+            const transferPoint = 207;
+            // const transferPoint = element.offsetWidth * .6;
+
+            if (self.status === 'mastered') {
+                // console.log("deltaX:" + event.deltaX)
+                // console.log("Mastered")
+                if (event.deltaX <= 0) {
+                    self.x(self.startX() + event.deltaX)
+                    self.actX(self.x() * -1);
+                    self.alpha(self.alpha() - 0.01);
+                    // console.log(self.x() + " : " + (transferPoint * -1));
+                }
+            } else {
+                // console.log("deltaX:" + event.deltaX)
+                // console.log("Studying")
+                if (event.deltaX >= 0) {
+                    self.x(self.startX() + event.deltaX);
+                    self.actX(self.x() * -1);
+                    self.alpha(self.alpha() - 0.01);
+                    // console.log(self.x() + " : " + (transferPoint));
+                }
+            }
+
+            if (self.x() >= transferPoint) {
+                // console.log('success transfering to master');
+                self.toggleStatus(favorite, event);
+                slideAudio.play();
+            } else if (self.x() <= (transferPoint * -1)) {
+                self.toggleStatus(favorite, event);
+                slideAudio.play();
+                // console.log('transfered to Studying');
+            }   
+        }
+
+        self.onPanEnd = function(data, event) {
+            resetVariables();
+            // this.isDragged = false
+            self.alpha(1);
+        }
+
+        function resetVariables() {
+            self.actX(0);
+            self.x(0);
+            self.startX(0);
+        }
+        
+        self.toggleStatus = function(favorite, event) {
+            var context = ko.contextFor(event.target);
+            if(context) {
+                // context.$parent.toggleStatus(favorite);
+                context.$parent.toggleFavorite(self);
+            }
+        }
+
+        function getWord(word) {
+            // TODO: custom request(only request for needed info)
+            $.getJSON(API_URL + 'words/' + word, function(data) {
+                console.log(data);
+                if(data.translation === ''){
+                    getTranslation(word);
+                }
+                self.wordObj(data);
+            });
+        }
+
+        function updateWord(word) {
+            return $.ajax({
+                url: API_URL + 'words/' + word,
+                type: 'put',
+                data: JSON.stringify(self.wordObj()),
+                headers: MICROSOFT_REQUEST_HEADER,
+                success: function(data){
+                    console.log(data);
+                }
+            });
+        }
+
+        function getTranslation(word) {
+            const jwt = JWT.get();
+            if(jwt === null) {
+                getMicrosoftAccessToken().then(()=>{
+                    getMicrosoftTranslation(word);
+                });
+            } else {
+                if(JWT.validate(jwt)){
+                    console.log(jwt);
+                    getMicrosoftTranslation(word);
+                } else {
+                    getMicrosoftAccessToken().then(()=>{
+                        getMicrosoftTranslation(word);
+                    });
+                }
+            }
+        }
+
+        function getMicrosoftTranslation(word) {
+            const request = MICROSOFT_TRANSLATE_ENDPOINT + JWT.get() + '&text=' + word + '&to=' + 'ja';
+            return $.get(request, function(data) {
+                console.log(data);
+                const parser = new DOMParser();
+                const xmlData = parser.parseFromString(data, 'application/xml');
+                console.log(xmlData);
+                self.wordObj().translation = data.getElementsByTagName('string')[0].innerHTML;
+                self.wordObj(self.wordObj());
+                updateWord(self.wordObj().text);
+                return data;
+            });
+        }
+
+        function getMicrosoftAccessToken() {
+            return $.ajax({
+                url: MICROSOFT_TOKEN_ENDPOINT + MICROSOFT_SUBSCRIPTION_KEY,
+                type: 'post',
+                data: {},
+                headers: MICROSOFT_REQUEST_HEADER,
+                success: function(data){
+                    var jwtValue = data;
+                    JWT.keep(jwtValue);
+                    console.log(data);
+                }
+            });
+        }
+    }
+
+    ( function( window, ko ) {
+        console.log("Hammer loaded");
+        var touchEvents = [ 'tap', 'pan', 'panright', 'panleft', 'panmove', 'panend'
+        ];
+
+        var makeMobileBindings = function( touchEventName ) {
+            ko.bindingHandlers[ touchEventName ] = {
+                init: function( element, valueAccessor, allBindingsAccessor, viewModel, bindingContext ) {
+                    var handler = valueAccessor(),
+                        allBindings = allBindingsAccessor();
+                    Hammer( element ).on( touchEventName, function( e ) {
+                        handler( viewModel, e );
+                    } );
+                }
+            };
+        };
+
+        ko.bindingHandlers.element = {
+            init: function(element, valueAccessor) {
+                var target = valueAccessor();
+                target(element);
+            }
+        };
+
+        ( function() {
+            for ( i in touchEvents ) {
+                var eventName = touchEvents[ i ];
+                makeMobileBindings( eventName );
+            }
+        } )();
+
+
+        // Activates knockout.js
+        ko.applyBindings(new AppViewModel());
+
+
+
+    }( this, ko ) );
+
+    
+    $(document).ready(function(){
+        $('#uniwebview')[0].click();
+        // window.location.href = 'uniwebview://success';
+        // $.get("uniwebview://success");
+        // alert("Uniwebview trigger")
+    });
+
+</script>
+{{end}}
+<style>
+    .container {
+        height: 100% !important;
+    }
+
+    .list {
+        height: 100%;
+    }
+
+    .del,
+    .cncl {
+        background: url(/assets/UI-assets/notification-button.png);
+        background-size: 100% 100%;
+        background-position: center;
+        box-shadow: none;
+        margin: 0;
+        border-radius: 3px;
+    }
+
+    .del,
+    .cncl {
+        background: url(/assets/UI-assets/notification-button.png);
+        background-size: 100% 100%;
+        background-position: center;
+        box-shadow: none;
+        margin: 0;
+        border-radius: 3px;
+    }
+
+    .bottom-actions .button{
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    .notification {
+        position: fixed;
+        bottom: -300%;
+        transition: all 0.3s ease-in-out;
+        background: #614138;
+        border: 5px solid #d9ab7e;
+        padding: 20px 15px;
+        width: 100%;
+        z-index: 110;
+    }
+
+    .notification.active {
+        bottom: 0;
+    }
+
+    .notification p {
+        text-align: center;
+    }
+
+    .notification .action {
+        display: block;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+    }
+
+    .notification .action:after {
+        content: " ";
+        display: block;
+        clear: both;
+    }
+
+    .notification .action li {
+        width: 50%;
+        float: left;
+        display: inline-block;
+        padding: 0px 10px;
+    }
+
+    .notification .action li button {
+        margin: 0;
+        width: 100%;
+    }
+
+    .tab {
+        padding: 0;
+        margin: 0;
+        position: fixed;
+        left: 0;
+        top: 61px;
+        width: 100%;
+        z-index: 100;
+        white-space: nowrap;
+    }
+
+    .tab.scroll {
+        overflow-x: auto;
+    }
+
+    .tab li {
+        width: 50%;
+        display: inline-block;
+        text-align: center;
+        padding: 0px;
+        height: 100% !important;
+        float: right;
+    }
+
+    .tab li a {
+        display: block;
+        position: relative;
+        color: #fff;
+        padding: 15px 0px;
+        text-decoration: none;
+        background: #926655;
+        font-family: Poppins, sans-serif;
+        font-size: 13px;
+        margin: 0 10px;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        position: relative;
+    }
+
+    .tab li a::after {
+        content: " ";
+        display: block;
+        background: #926655;
+        position: absolute;
+        border-top-left-radius: 5px;
+        transform: skewX(-5deg);
+        top: 0;
+        left: -8px;
+        width: 30px;
+        height: 100%;
+    }
+
+    .tab li a::before {
+        content: " ";
+        display: block;
+        background: #926655;
+        position: absolute;
+        border-top-right-radius: 5px;
+        transform: skewX(5deg);
+        top: 0;
+        right: -8px;
+        width: 30px;
+        height: 100%;
+    }
+
+    .tab li a img {
+        width: 50px;
+        height: auto;
+        position: absolute;
+        top: 6px;
+        left: 25%;
+    }
+
+    .tab li span {
+        position: absolute;
+        top: 6px;
+        right: 15px;
+        display: inline-block;
+        border-radius: 3px;
+        padding: 0 10px;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    .tab li.active a {
+        position: relative;
+        background: #d9ab7e;
+    }
+
+    .tab li.active a::after,
+    .tab li.active a::before {
+        background: #d9ab7e;
+    }
+    .hidden {
+        display: none;
+        height: 100% !important;
+    }
+
+    .active {
+        display: block !important;
+    }
+
+    .dragged {
+        box-shadow: 0px 0px 230px rgba(255, 255, 255, 0.5) !important;
+        background: #f1c40f;
+    }
+
+    .dragged h4 span {
+        color: #2c3e50;
+    }
+
+    .detail {
+        transition: background 0.3s ease-in-out;
+        box-shadow: none;
+    }
+
+    h4 {
+        vertical-align: middle;
+        white-space: nowrap;
+        width: auto !important;
+    }
+
+    h4 span {
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    p {
+        white-space: nowrap;
+    }
+
+    .action {
+        white-space: nowrap;
+    }
+
+    .action li a:hover {
+        background: transparent;
+    }
+
+    .action li a:active {
+        background: rgba(0, 0, 0, 0.4);
+    }
+    /*# end of word list card */
+
+    .title-center {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    text-align: center; }
+
+    nav {
+    background: transparent; }
+
+    .nav {
+    width: 100% !important; }
+
+    .xlink {
+    padding: 16px !important; }
+
+    .title {
+    width: 100%; }
+
+    .close {
+        box-shadow: none !important;
+        background: url(/assets/UI-assets/button_close.png) !important;
+        background-position: center !important;
+        background-size: 100% 100% !important;
+        color: transparent;
+        margin: 0 auto !important;
+    }
+
+    .back {
+        box-shadow: none !important;
+        background: url(/assets/UI-assets/back-button.png) !important;
+        background-size: 100% 100% !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        color: transparent;
+        height: 50px !important;
+        width: 100px !important;
+        margin: 0 auto !important;
+        border-radius: 3px !important;
+        box-shadow: none !important;
+    }
+
+    .back img {
+        height: 25px;
+        width: 55px;
+    }
+
+    .settings {
+    background: url(/assets/UI-assets/button_green.png) !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    padding: 15px 16px !important;
+    box-shadow: none;
+    margin: 0 auto !important;
+    border-radius: 3px; }
+
+    .img-title {
+    display: block;
+    width: 200px;
+    height: auto;
+    margin: 0 auto; }
+
+</style>
