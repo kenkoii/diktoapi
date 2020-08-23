@@ -7,14 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kenkoii/diktoapi/api/models"
-	"google.golang.org/appengine"
 )
 
 // Handler handles the '/' route
 func ListHandler(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	password, _ := strconv.ParseInt(c.Param("password"), 10, 64)
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	user, err := models.GetUser(ctx, id, password)
 	if err != nil {
 		// LogErrorGin(c, err)
@@ -27,7 +26,7 @@ func ListHandler(c *gin.Context) {
 func SettingsHandler(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	password, _ := strconv.ParseInt(c.Param("password"), 10, 64)
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	user, err := models.GetUser(ctx, id, password)
 	if err != nil {
 		LogErrorGin(c, err)
@@ -42,7 +41,7 @@ func DetailHandler(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Query("id"), 10, 64)
 	password, _ := strconv.ParseInt(c.Query("password"), 10, 64)
 	word := c.Param("word")
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	w, err := models.GetWord(ctx, word)
 	if err != nil {
 		// LogErrorGin(c, err)

@@ -6,12 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/kenkoii/diktoapi/api/models"
-	"google.golang.org/appengine"
 )
 
 // PostWordEndpoint handles the /api/v1/words/ {POST} method
 func PostWordEndpoint(c *gin.Context) {
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	word, err := models.NewWord(ctx, c.Request.Body)
 	if err != nil {
 		LogErrorGin(c, err)
@@ -33,7 +32,7 @@ func PostWordEndpoint(c *gin.Context) {
 
 // UpdateWordEndpoint handles the /api/v1/words/ {POST} method
 func UpdateWordEndpoint(c *gin.Context) {
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	word, err := models.UpdateWord(ctx, c.Request.Body)
 	if err != nil {
 		LogErrorGin(c, err)
@@ -56,7 +55,7 @@ func UpdateWordEndpoint(c *gin.Context) {
 // GetWordEndpoint handles the /api/v1/words/{id} {GET} method
 func GetWordEndpoint(c *gin.Context) {
 	id := c.Param("id")
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	word, err := models.GetWord(ctx, id)
 	if err != nil {
 		LogErrorGin(c, err)
@@ -80,7 +79,7 @@ func GetWordEndpoint(c *gin.Context) {
 // GetLemmaEndpoint handles the /api/v1/words/{id} {GET} method
 func GetLemmaEndpoint(c *gin.Context) {
 	id := c.Param("id")
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	word, err := models.GetLemma(ctx, id)
 	if err != nil {
 		LogErrorGin(c, err)
@@ -103,7 +102,7 @@ func GetLemmaEndpoint(c *gin.Context) {
 
 // FavoriteWordEndpoint handles the /api/v1/words/{id} {POST} method
 func FavoriteWordEndpoint(c *gin.Context) {
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	res, err := models.FavoriteWord(ctx, c.Request.Body)
 	if err != nil {
 		LogErrorGin(c, err)
@@ -129,7 +128,7 @@ func FavoriteWordEndpoint(c *gin.Context) {
 
 // RemoveFavoriteWordEndpoint handles the /api/v1/words/{id} {POST} method
 func RemoveFavoriteWordEndpoint(c *gin.Context) {
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	word, err := models.RemoveFavoriteWord(ctx, c.Request.Body)
 	if err != nil {
 		LogErrorGin(c, err)
@@ -153,7 +152,7 @@ func RemoveFavoriteWordEndpoint(c *gin.Context) {
 
 // FrontendFavoriteWordEndpoint handles the /api/v1/words/{id} {POST} method
 func FrontendFavoriteWordEndpoint(c *gin.Context) {
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	res, err := models.FrontendFavoriteWord(ctx, c.Request.Body)
 	if err != nil {
 		LogErrorGin(c, err)
