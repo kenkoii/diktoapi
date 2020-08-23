@@ -20,7 +20,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/memcache"
-	"google.golang.org/appengine/urlfetch"
 )
 
 // TokenString is the JSON Webtoken provided by Microsoft
@@ -364,7 +363,7 @@ func RemoveFavoriteWord(c context.Context, r io.ReadCloser) (*Word, error) {
 
 func searchLemma(c context.Context, word *Word) (*Word, error) {
 	var apiURL = "https://www.enclout.com/api/v1/term/show.json?auth_token=kdXnSYS9jhyJULBXC4Bx&text="
-	client := urlfetch.Client(c)
+	client := http.DefaultClient
 	req, err := http.NewRequest("GET", apiURL+word.Text, nil)
 	if err != nil {
 		return nil, err
@@ -397,7 +396,7 @@ func contains(f []Favorite, w Word) bool {
 func searchWord(c context.Context, word *Word) (*Word, error) {
 	// go searchAudio(c, word)
 	var apiURL = "https://wordsapiv1.p.mashape.com/words/"
-	client := urlfetch.Client(c)
+	client := http.DefaultClient
 	req, err := http.NewRequest("GET", apiURL+word.Text, nil)
 	if err != nil {
 		return nil, err
@@ -452,7 +451,7 @@ func searchAudio(c context.Context, word *Word) (*Word, error) {
 	var apiURL = "https://www.dictionaryapi.com/api/v1/references/collegiate/xml/"
 	var apiKey = "?key=720750f6-2da7-4612-bb3e-2914b923052e"
 	var baseAudioURL = "http://media.merriam-webster.com/soundc11/"
-	client := urlfetch.Client(c)
+	client := http.DefaultClient
 	req, err := http.NewRequest("GET", apiURL+word.Text+apiKey, nil)
 	if err != nil {
 		return nil, err
@@ -505,7 +504,7 @@ func searchTranslation(c context.Context, word *Word) (*Word, error) {
 		return nil, err
 	}
 
-	client := urlfetch.Client(c)
+	client := http.DefaultClient
 	req, err := http.NewRequest("GET", translationURL+TokenString+"&text="+word.Text+"&to=ja", nil)
 	if err != nil {
 		return nil, err
@@ -534,7 +533,7 @@ func getMicrosoftToken(c context.Context) (string, error) {
 	var tokenURL = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken?Subscription-Key="
 	var subscriptionKey = "07657cb89d4c4136b5165509a16c469a"
 
-	client := urlfetch.Client(c)
+	client := http.DefaultClient
 	req, err := http.NewRequest("POST", tokenURL+subscriptionKey, nil)
 	if err != nil {
 		return "", err

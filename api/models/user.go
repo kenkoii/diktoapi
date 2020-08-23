@@ -17,7 +17,6 @@ import (
 	"github.com/asaskevich/govalidator"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/memcache"
-	"google.golang.org/appengine/urlfetch"
 )
 
 // Settings is the model for a user
@@ -177,7 +176,7 @@ func GetUser(c context.Context, id int64, password int64) (interface{}, error) {
 func verifyPassword(c context.Context, id int64, password int64) uint64 {
 	var apiURL = "http://englishstoryserver.appspot.com/ConfirmPassword"
 	var reqURL = apiURL + "?userId=" + strconv.FormatInt(id, 10) + "&password=" + strconv.FormatInt(password, 10)
-	client := urlfetch.Client(c)
+	client := http.DefaultClient
 	req, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
 		return 0

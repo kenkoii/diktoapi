@@ -2,13 +2,13 @@
 
 <div class=loader style="display: block;" data-bind="visible: false"></div>
 <ul class="sandmswitch" style="display: none;" data-bind="visible: user()!=null && isFavorited()">
-    <li><img src="../../assets/UI-assets/studying.png" alt=""></li>
+    <li><img src="/assets/UI-assets/studying.png" alt=""></li>
     <li>
         <label class="swtch" data-bind="click: toggleStatus, css:{active: isMastered}">
       <input type="checkbox" name="">
     </label>
     </li>
-    <li><img src="../../assets/UI-assets/mastered.png" alt=""></li>
+    <li><img src="/assets/UI-assets/mastered.png" alt=""></li>
 </ul>
 
 <section style="display: none;" data-bind="visible: true">
@@ -47,9 +47,9 @@
     <li data-bind="visible: user()==null || user().error"></li>
     <li data-bind="visible: isFavorited() && user()!=null && !user().error"><a class="button circle settings fav"  data-bind="click: togglePromptFave" (click)="togglePromptFave()" type="button" name="button"> 削除<!--<i class="fa fa-trash" aria-hidden="true"></i>--></a></li>
     <li data-bind="visible: !isFavorited() && user()!=null && !user().error"><a class="button circle settings fav" data-bind="click: toggleFavorite" (click)="favoriteWord()" type="button" name="button"> 登録<!--<i class="fa fa-plus" aria-hidden="true"></i>--></a></li>
-    <!--<li *ngIf="(name | async) == 'Detail'"><a [routerLink]="['/',(user$ | async).id,(user$ | async).password,'list']" class="button circle back" type="button" name="button"><img src="../../assets/UI-assets/back-word.png" alt=""></a></li>-->
-    <li><a data-bind="click: goToWordList" (click)="playBackAudio()" [routerLink]="['/','list']" class="button circle back" type="button" name="button"><img src="../../assets/UI-assets/back-word.png" alt=""></a></li>
-    <!-- <li data-bind="visible: user()==null"><a (click)="playBackAudio()" href="uniwebview://close" class="button circle back" type="button" name="button"><img src="../../assets/UI-assets/back-word.png" alt=""></a></li> -->
+    <!--<li *ngIf="(name | async) == 'Detail'"><a [routerLink]="['/',(user$ | async).id,(user$ | async).password,'list']" class="button circle back" type="button" name="button"><img src="/assets/UI-assets/back-word.png" alt=""></a></li>-->
+    <li><a data-bind="click: goToWordList" (click)="playBackAudio()" [routerLink]="['/','list']" class="button circle back" type="button" name="button"><img src="/assets/UI-assets/back-word.png" alt=""></a></li>
+    <!-- <li data-bind="visible: user()==null"><a (click)="playBackAudio()" href="uniwebview://close" class="button circle back" type="button" name="button"><img src="/assets/UI-assets/back-word.png" alt=""></a></li> -->
     <!--<li><a class="button circle settings" (click)="favoriteWord()" type="button" name="button"><i *ngIf="!isFavorited" class="fa fa-plus" aria-hidden="true"></i><i *ngIf="isFavorited" class="fa fa-minus" aria-hidden="true"></i></a></li>-->
 </ul>
 
@@ -70,11 +70,11 @@
 
 
 
-<script src="../../assets/js/jquery.min.js"></script>
-<script src="../../assets/js/knockout-3.4.2.js"></script>
-<script src="../../assets/js/howler.core.min.js"></script>
-<script src="../../assets/js/jwt-client.min.js"></script>
-<script src="../../assets/js/main.js"></script>
+<script src="/assets/js/jquery.min.js"></script>
+<script src="/assets/js/knockout-3.4.2.js"></script>
+<script src="/assets/js/howler.core.min.js"></script>
+<script src="/assets/js/jwt-client.min.js"></script>
+<script src="/assets/js/main.js"></script>
 {{if .data}}
 <script>
     var data = {{.data}}
@@ -424,7 +424,7 @@
 
     .del,
     .cncl {
-        background: url(../../assets/UI-assets/notification-button.png);
+        background: url(/assets/UI-assets/notification-button.png);
         background-size: 100% 100%;
         background-position: center;
         box-shadow: none;
@@ -433,7 +433,7 @@
     }
 
     .fav {
-        background: url(../../assets/UI-assets/back-button.png) !important;
+        background: url(/assets/UI-assets/back-button.png) !important;
         background-size: 77px 100% !important;
         background-position: center;
         width: 77px !important;
@@ -443,7 +443,7 @@
 
     .close {
         box-shadow: none !important;
-        background: url(../../assets/UI-assets/button_close.png);
+        background: url(/assets/UI-assets/button_close.png);
         background-position: center;
         background-size: 100% 100%;
         color: transparent;
@@ -452,7 +452,7 @@
 
     .back {
         box-shadow: none !important;
-        background: url(../../assets/UI-assets/back-button.png) !important;
+        background: url(/assets/UI-assets/back-button.png) !important;
         background-size: 100% 100%;
         background-position: center;
         background-repeat: no-repeat;
@@ -470,7 +470,7 @@
     }
 
     .settings {
-        background: url(../../assets/UI-assets/button_green.png);
+        background: url(/assets/UI-assets/button_green.png);
         background-size: 100% 100%;
         background-position: center;
         box-shadow: none;

@@ -1084,14 +1084,14 @@ section .container {
   font-family: 'Open Sans';
   font-style: normal;
   font-weight: 400;
-  src: local("Open Sans Regular"), local("OpenSans-Regular"), url("../../assets/fonts/cJZKeOuBrn4kERxqtaUH3bO3LdcAZYWl9Si6vvxL-qU.woff") format("woff");
+  src: local("Open Sans Regular"), local("OpenSans-Regular"), url("/assets/fonts/cJZKeOuBrn4kERxqtaUH3bO3LdcAZYWl9Si6vvxL-qU.woff") format("woff");
 }
 
 @font-face {
   font-family: 'Poppins';
   font-style: normal;
   font-weight: 700;
-  src: local("Poppins Bold"), local("Poppins-Bold"), url("../../assets/fonts/57TQ-anwthzkETEIO4jESL3hpw3pgy2gAi-Ip7WPMi0.woff") format("woff");
+  src: local("Poppins Bold"), local("Poppins-Bold"), url("/assets/fonts/57TQ-anwthzkETEIO4jESL3hpw3pgy2gAi-Ip7WPMi0.woff") format("woff");
 }
 
 html {
@@ -1103,7 +1103,7 @@ body {
   margin: 0;
   height: 100% !important;
   width: 100% !important;
-  background: url(../../assets/UI-assets/backdrop.png);
+  background: url(/assets/UI-assets/backdrop.png);
   background-position: center;
   background-attachment: fixed;
   background-size: 100% 100%;

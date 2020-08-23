@@ -1,0 +1,7 @@
+runtime: go111
+
+handlers:
+- url: /.*
+  script: auto
+- url: /worker/.*
+  script: auto

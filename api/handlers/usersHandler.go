@@ -9,14 +9,13 @@ import (
 	"log"
 
 	"github.com/kenkoii/diktoapi/api/models"
-	"google.golang.org/appengine"
 )
 
 // GetUserEndpoint handles the /api/v1/users/{id} {GET} method
 func GetUserEndpoint(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	password, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	user, err := models.GetUser(ctx, id, password)
 	if err != nil {
 		LogErrorGin(c, err)
@@ -42,7 +41,7 @@ func GetUserEndpoint(c *gin.Context) {
 func UpdateUserEndpoint(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 
-	ctx := appengine.NewContext(c.Request)
+	ctx := c.Request.Context()
 	user, err := models.UpdateUser(ctx, id, c.Request.Body)
 	if err != nil {
 		LogErrorGin(c, err)

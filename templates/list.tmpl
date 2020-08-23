@@ -4,8 +4,8 @@
     <a style="display: none;" id="uniwebview" href="uniwebview://success"></a>
     <nav class="navigation fixed top fit no-border" >
     <ul class="nav">
-        <li data-bind="if: selected()=='favorites'" class="title"><a class="xlink"><img class="img-title" src="../../assets/UI-assets/Mytango.png" alt=""></a></li>
-        <li data-bind="if: selected()=='settings'" class="title"><a class="xlink"><img class="img-title" src="../../assets/UI-assets/setting.png" alt=""></a></li> 
+        <li data-bind="if: selected()=='favorites'" class="title"><a class="xlink"><img class="img-title" src="/assets/UI-assets/Mytango.png" alt=""></a></li>
+        <li data-bind="if: selected()=='settings'" class="title"><a class="xlink"><img class="img-title" src="/assets/UI-assets/setting.png" alt=""></a></li> 
     </ul>
     </nav>
     <ul class="bottom-actions">
@@ -13,7 +13,7 @@
     <!--<li *ngIf="(name | async) == 'Favorites' || (name | async) == 'Splash'"><a href="uniwebview://close" class="button circle close" type="button" name="button">.</a></li>-->
     <li data-bind="visible: selected()=='favorites'"><a data-bind="click: close" class="button circle close" type="button" name="button">.</a></li>
     <li data-bind="visible: selected()=='favorites'"><a data-bind="click: switchWindow" (click)="playClickSound()" [routerLink]="['settings']" class="button circle settings" type="button" name="button"><i class="fa fa-cog" aria-hidden="true"></i></a></li>
-    <li data-bind="visible: selected()=='settings'"><a data-bind="click: switchWindow" class="button circle back" type="button" name="button"><img src="../../assets/UI-assets/back-word.png" alt=""></a></li>   
+    <li data-bind="visible: selected()=='settings'"><a data-bind="click: switchWindow" class="button circle back" type="button" name="button"><img src="/assets/UI-assets/back-word.png" alt=""></a></li>   
     </ul>
 
     <div class="notification" data-bind="css: {active: isPromptFave}" [class.active]="isPromptFave">
@@ -34,11 +34,11 @@
         <section >
             <ul class="tab scroll">
                 <li data-bind="css: { active : isActive('mastered') }">
-                    <a data-bind="click: function() { setActiveTab('mastered') }"><img src="../../assets/UI-assets/mastered.png" alt=""><span data-bind="text: mastered().length">0</span></a>
+                    <a data-bind="click: function() { setActiveTab('mastered') }"><img src="/assets/UI-assets/mastered.png" alt=""><span data-bind="text: mastered().length">0</span></a>
 
                 </li>
                 <li data-bind="css: { active : isActive('studying') }">
-                    <a data-bind="click: function() { setActiveTab('studying') }"><img src="../../assets/UI-assets/studying.png" alt=""><span data-bind="text: studying().length">0</span></a>
+                    <a data-bind="click: function() { setActiveTab('studying') }"><img src="/assets/UI-assets/studying.png" alt=""><span data-bind="text: studying().length">0</span></a>
 
                 </li>
             </ul>
@@ -168,13 +168,13 @@
 
 
 
-<script src="../../assets/js/jquery.min.js"></script>
-<script src="../../assets/js/knockout-3.4.2.js"></script>
-<script src="../../assets/js/howler.core.min.js"></script>
-<script src="../../assets/js/hammer.min.js"></script>
-<script src="../../assets/js/main.js"></script>
-<script src="../../assets/js/jwt-client.min.js"></script>
-<script src="../../assets/js/timeago.min.js"></script>
+<script src="/assets/js/jquery.min.js"></script>
+<script src="/assets/js/knockout-3.4.2.js"></script>
+<script src="/assets/js/howler.core.min.js"></script>
+<script src="/assets/js/hammer.min.js"></script>
+<script src="/assets/js/main.js"></script>
+<script src="/assets/js/jwt-client.min.js"></script>
+<script src="/assets/js/timeago.min.js"></script>
 {{if .data}}
 <script>
     var data = {{.data}}
@@ -684,7 +684,7 @@
 
     .del,
     .cncl {
-        background: url(../../assets/UI-assets/notification-button.png);
+        background: url(/assets/UI-assets/notification-button.png);
         background-size: 100% 100%;
         background-position: center;
         box-shadow: none;
@@ -694,7 +694,7 @@
 
     .del,
     .cncl {
-        background: url(../../assets/UI-assets/notification-button.png);
+        background: url(/assets/UI-assets/notification-button.png);
         background-size: 100% 100%;
         background-position: center;
         box-shadow: none;
@@ -916,7 +916,7 @@
 
     .close {
         box-shadow: none !important;
-        background: url(../../assets/UI-assets/button_close.png) !important;
+        background: url(/assets/UI-assets/button_close.png) !important;
         background-position: center !important;
         background-size: 100% 100% !important;
         color: transparent;
@@ -925,7 +925,7 @@
 
     .back {
         box-shadow: none !important;
-        background: url(../../assets/UI-assets/back-button.png) !important;
+        background: url(/assets/UI-assets/back-button.png) !important;
         background-size: 100% 100% !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
@@ -943,7 +943,7 @@
     }
 
     .settings {
-    background: url(../../assets/UI-assets/button_green.png) !important;
+    background: url(/assets/UI-assets/button_green.png) !important;
     background-size: 100% 100% !important;
     background-position: center !important;
     padding: 15px 16px !important;

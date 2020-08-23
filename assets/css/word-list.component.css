@@ -5,7 +5,7 @@
   height: 100%; }
 
 .del, .cncl {
-  background: url(../../assets/UI-assets/notification-button.png);
+  background: url(/assets/UI-assets/notification-button.png);
   background-size: 100% 100%;
   background-position: center;
   box-shadow: none;
@@ -13,7 +13,7 @@
   border-radius: 3px; }
 
 .del, .cncl {
-  background: url(../../assets/UI-assets/notification-button.png);
+  background: url(/assets/UI-assets/notification-button.png);
   background-size: 100% 100%;
   background-position: center;
   box-shadow: none;
